@@ -6,15 +6,21 @@ new p5();
 
 // -------------------------------------------------------------- VARS.
 
-
 const CANVAS_SIZE = createVector(500, 800);
 
 const ALL_WORDS = [
   'apartment', 'glass', 'keyboard', 'windows', 'mac', 'microsoft',
-  'apple', 'pencil', 'tablet', 'light', 'function', 'clothes',
+  'apple', 'pencil', 'tablet', 'light', 'tennis', 'clothes',
   'screen', 'human', 'portfolio', 'discover', 'fish', 'scissors',
-  'room', 'layer', 'crazy', 'sword', 'helmet', 'charger', 'pan',
-  'league', 'videogame', 'water', 'gun', 'clock', 'careful',
+  'room', 'layer', 'crazy', 'sword', 'helmet', 'charger', 'internet',
+  'league', 'videogame', 'water', 'gun', 'clock', 'careful', 'mouse',
+  'alphabet', 'fork', 'movie', 'theater', 'animal', 'kitchen',
+  'programming', 'sublime', 'awesome', 'wisdom', 'character',
+  'luxury', 'netflix', 'six', 'suitcase', 'store', 'street',
+  'gorgeous', 'cute', 'tokyo', 'anime', 'picture', 'wooden', 'dollar',
+  'murder', 'bulldozer', 'technology', 'blockchain', 'bitcoin',
+  'brick', 'design', 'thinking', 'universe', 'parody', 'question',
+  'answer', 'contemporary', 'travel', 'incredible'
 ];
 
 let words = ALL_WORDS.map(WORD => {
@@ -22,6 +28,7 @@ let words = ALL_WORDS.map(WORD => {
   //console.log(WORD);
 })
 
+const BASE_CELL = createVector(0,0);
 const BASE_CELL_POS = createVector(300,300);
 const INPUT_SIZE_HTML = 20;
 const CELL_SIZE = (INPUT_SIZE_HTML/2) + INPUT_SIZE_HTML;
@@ -33,28 +40,28 @@ const ROTATIONS = {
 
 const OPPOSITE_ROTATIONS = {
   'ORIENTATIONS': {
-    ROTATIONS.ORIENTATIONS[0]: ROTATIONS.ORIENTATIONS[1],
-    ROTATIONS.ORIENTATIONS[1]: ROTATIONS.ORIENTATIONS[0],
+    [ROTATIONS.ORIENTATIONS[0]]: ROTATIONS.ORIENTATIONS[1],
+    [ROTATIONS.ORIENTATIONS[1]]: ROTATIONS.ORIENTATIONS[0],
   },
   'DIRECTIONS': {
-    ROTATIONS.DIRECTIONS[0]: ROTATIONS.DIRECTIONS[1],
-    ROTATIONS.DIRECTIONS[1]: ROTATIONS.DIRECTIONS[0],
+    [ROTATIONS.DIRECTIONS[0]]: ROTATIONS.DIRECTIONS[1],
+    [ROTATIONS.DIRECTIONS[1]]: ROTATIONS.DIRECTIONS[0],
   },
 }
 
-const CELL_ROTATIONS = {
-  ROTATIONS.ORIENTATIONS[0]: {
-    ROTATIONS.DIRECTIONS[0]: createVector(1,0), 
-    ROTATIONS.DIRECTIONS[1]: createVector(-1,0)},
-  ROTATIONS.ORIENTATIONS[1]: {
-    ROTATIONS.DIRECTIONS[0]: createVector(0,1), 
-    ROTATIONS.DIRECTIONS[1]: createVector(0,-1)}
+const CELL_MOVEMENTS = {
+  [ROTATIONS.ORIENTATIONS[0]]: {
+    [ROTATIONS.DIRECTIONS[0]]: createVector(1,0), 
+    [ROTATIONS.DIRECTIONS[1]]: createVector(-1,0)},
+  [ROTATIONS.ORIENTATIONS[1]]: {
+    [ROTATIONS.DIRECTIONS[0]]: createVector(0,1), 
+    [ROTATIONS.DIRECTIONS[1]]: createVector(0,-1)}
 }
 
 
 let cells_per_word = {};
 
-let words_rotations = [];
+let words_angles = [];
 let drawed_words = [];
 let words_to_extend = [];
 let extended_words = [];
@@ -63,29 +70,18 @@ let active_cells = [];
 
 let mouse = createVector(0, 0);
 
+const LIMIT_WORDS_DRAWED = 8;
+let limit_words_drawed_counter = 0;
+
 
 
 /*
 
-Un reflejo de mi imagición, mis palabras.
-
-Aquello que veo es algo asi como literalmente mi imaginación
-pero automatizada, y siguiendo las diferentes reglas ya sabidas.
-
-Es como un reflejo de mis capacidades pero mucho más potente,
-con una capacidad de visualización y cambio mucho más rapida
-que la mia, pero a fin de cuentas es una version de mi mente
-que corre más rapido.
-
-No que piensa, si no que corre lo que ya sé pero más rapido, en menos
-tiempo y mucho más eficiente, sin posibles errores.
-
-Dibujemos una palabra.
-
-Cada input solo puede contener un caracter.
+Arreglar algoritmo de palabras,
+Hacer que la palabra pruebe con absolutamente todas
+las palabras que existen en la lista.
 
 */
-
 
 
 
@@ -110,164 +106,348 @@ function restartGame() {
   // ----- FUNCTIONS
 
   drawBorder();
-  drawWord();
+  createCrossword()
+}
+
+function createCrossword() {
+  drawRootWord();
 
   for (WORD of words_to_extend) {
+    console.log('');
+    console.log('');
+    console.log('');
+    console.log('');
+    console.log('');
+    console.log('');
+    console.log(WORD, 'WORD');
+    console.log('');
+    console.log(limit_words_drawed_counter,'limit_words_drawed_counter');
+    if (limit_words_drawed_counter == LIMIT_WORDS_DRAWED-1) break;
     extendWord(WORD);
   }
 }
 
 
-function drawWord() {
-  function inputManager() {
-    let word = this.value();
-    if (word.length == 0) {
-      word = '';
-    } else {
-      this.value(word[0].toUpperCase());
-    }
-    console.log(word);
-  }
-
+function drawRootWord() {
+  console.log('');
+  console.log('(drawRootWord)');
   const RANDOM_INDEX = randomInt(words.length);
   const WORD = words.splice(RANDOM_INDEX, 1)[0];
   let word_cells = [];
 
-  console.log(RANDOM_INDEX, words.length, 'RANDOM INDEX');
-  console.log(WORD, 'WORD');
+  //console.log(RANDOM_INDEX, words.length, 'RANDOM INDEX');
+  console.log(WORD, '[word]');
 
-  const START_CELL = createVector(0,0);
-  const RANDOM_ROTATIONS = {
-    'ORIENTATION' random(ROTATIONS.ORIENTATIONS), 
-    'DIRECTION': random(ROTATIONS.DIRECTIONS)};
-  let actual_cell = START_CELL.copy();
+  const RANDOM_ANGLES = {
+    'ORIENTATION': random(ROTATIONS.ORIENTATIONS),
+    'DIRECTION': random(ROTATIONS.DIRECTIONS)
+  }
+
+  const RANDOM_CELL_MOVEMENT = 
+    CELL_MOVEMENTS[RANDOM_ANGLES.ORIENTATION][RANDOM_ANGLES.DIRECTION];
+  
+  let actual_cell = BASE_CELL.copy();
   let cell_pos = 0;
 
 
 
   // ** draw an input for each letter
   for (LETTER of WORD) {
-    console.log(LETTER, 'LETTER');
-
-    cell_pos = p5.Vector.add(
-      BASE_CELL_POS, p5.Vector.mult(actual_cell, CELL_SIZE));
-
-    //console.log(cell_pos.x, cell_pos.y);
-
-    const INP = createInput(LETTER);
-    INP.position(cell_pos.x, cell_pos.y);
-    INP.size(INPUT_SIZE_HTML, INPUT_SIZE_HTML);
-    INP.input(inputManager);
-
+    //console.log(LETTER, 'LETTER');
+    drawLetter(LETTER, actual_cell);
 
     active_cells.push(actual_cell.copy());
     word_cells.push(actual_cell.copy());
-    actual_cell.add(CELL_DIRECTION);
+    actual_cell.add(RANDOM_CELL_MOVEMENT);
   }
 
   cells_per_word[WORD] = word_cells;
-  words_rotations[WORD] = RANDOM_ROTATIONS;
+  words_angles[WORD] = RANDOM_ANGLES;
   drawed_words.push(WORD);
   words_to_extend.push(WORD);
 }
 
+/*
+Plug words to this word :)
+*/
 function extendWord(EXTEND_WORD) {
-  function wordMaxPossibleConnections(WORD) {
-    let max = 0;
-
-    // la palabra es par o inpar?
-    // si divido la palabra por dos y el restante es 0, etnocnes es par
-    if (WORD.length % 2 == 0) { // par
-      max = WORD.length / 2;
-    } else {
-      max = ((WORD.length-1)/2)+1;
-    }
-
-    return max;
-  }
-
-  function letterIndexApproved(LETTER_INDEX, SELECTED_LETTER_INDEXES) {
-    // en realidad lo que comparo no son las letras en si
-    // son sus index
-    // TEST IF THE LETTER FOLLOW THE RULES OF THE CRUCIGRAMA.
-    return true;
-  }
+  console.log('');
+  console.log('(extendWord)');
+  console.log(EXTEND_WORD, '[word to extend]');
   
-  /*
-  const RANDOM_POSSIBLE_CONNECTIONS = Math.floor(
-    random(1, 1+wordMaxPossibleConnections(EXTEND_WORD)));
-  const WORD_CONNECTIONS = 
-    Math.floor(random(1+RANDOM_POSSIBLE_CONNECTIONS));
-  */
-
-  // ***** DEBO ASEGURARME DE QUE AL MENOS ESCOJA UNA PALABRA ***
-
-
   let selected_letter_indexes = [];
 
-  // el numero de intentos que voy a hacer para ponerla
-  // como letra conectora
-  const LETTER_TRIES = 3;
-  const SELECT_RANDOM_WORD_TRIES = 5;
-  const FIT_RANDOM_WORD_TRIES = 5;
-  // de cuantas formas puedo intentar
-  // encajar la palabra??
-  // en realidad de varias
-  // sobre todo si la letra se repite en ambas palabras.
-  // pero principalmente solo de 2 formas.
-  // suponiendo que la letra solo se encuentra una vez
-  // en cada palabra.
-
+  const LETTER_TRIES = 6;
+  const SELECT_RANDOM_WORD_TRIES = 20;
+  
   let random_letter_index;
   let selected_letter;
   let random_word;
   let random_word_letter_index_match;
 
   
+  /*
+  try random letters of this word and check if we can use them
+  with a crucigrama algorithm, *(not all the letters can be used).
+  */
   for (let letter_try = 0; letter_try < LETTER_TRIES; letter_try++) {
-    random_letter_index = randomInt(EXTEND_WORD.length+1);
-    if (letterIndexApproved(random_letter_index, selected_letter_indexes)) {
-      selected_letter_indexes.push(random_letter_index);
-      selected_letter = EXTEND_WORD[random_letter_index];
-    } else {continue};
+    console.log('********** TRY (' + letter_try + '/' + LETTER_TRIES + ') **********')
+    random_letter_index = randomInt(EXTEND_WORD.length);
+    selected_letter = EXTEND_WORD[random_letter_index];
+    console.log(selected_letter, '[POSSIBLE random selected letter]');
+    console.log(selected_letter_indexes.length, '[selected indexes length]');
+    if (!checkLetterAlgorithm(random_letter_index, selected_letter_indexes)) {
+      continue;
+    }
+    
+    console.log(random_letter_index, '[random letter index]');
+    console.log(selected_letter, '[random selected letter]');
 
+
+    /*
+    Look for a word that can be plugged in with the selected letter
+    */
+    select_random_word_loop:
     for (let select_random_word_try = 0; select_random_word_try < SELECT_RANDOM_WORD_TRIES; select_random_word_try++) {
       random_word = random(words);
-      let letter_common_index_group;
-      if (random_word.includes(selected_letter)) {
-        letter_common_index_group = random_word.map((LETTER, index) => {
-          if (LETTER == selected_letter) return index;
-        })
+      if (!random_word.includes(selected_letter)) {
+        console.log(random_word, '** NOT INCLUDES ', selected_letter)
+        continue;
       }
+      selected_letter_indexes.push(random_letter_index);
+      let common_letter_indexes = getCommonLetterIndexes(random_word, selected_letter);
+      console.log(random_word, '[random word to connect]');
+      console.log(common_letter_indexes.length, '[common letters]')
+
       
-      // lets try all the different ways of fiting this word
-      // when achived, then lets try another letter. :)
-      for (const LETTER_COMMON_INDEX of letter_common_index_group) {
-        // TRY THE TWO WAYS OF PUTTING IT.
-        let OPPOSITE_EXTEND_WORD_ORIENTATION = 
-          OPPOSITE_ROTATIONS.ORIENTATIONS[
-            words_rotations[EXTEND_WORD].ORIENTATION];
+      /*
+      If found a word, now lets try fitting it in all the possible
+      ways, if it contains this letter repeated times, then lets
+      try them too, just in case it overflows other words.
+      */
+      for (const COMMON_INDEX of common_letter_indexes) {
+        console.log(words_angles[EXTEND_WORD], '[angles of word to extend]');
+        let OPPOSITE_EXTEND_WORD_ORIENTATION = OPPOSITE_ROTATIONS.ORIENTATIONS[words_angles[EXTEND_WORD].ORIENTATION];
+        let SELECTED_LETTER_CELL = cells_per_word[EXTEND_WORD][random_letter_index]
 
 
-        for (const DIRECTION of ROTATIONS.DIRECTIONS) {
-          // ahora debo probar encajar ambas direcciones
-          // y si alguna encaja entonces perfecto, nos devolvemos
-          // directamente a probar otra letra.
+        /*
+        Each one of the tries has to try fitting the word
+        in both of the two directions.
+        */
+        for (const ACTUAL_DIRECTION of ROTATIONS.DIRECTIONS) {
+          console.log(OPPOSITE_EXTEND_WORD_ORIENTATION, '[opposite orientation of word to extend]');
+          console.log(ACTUAL_DIRECTION, '[random direction]');
+          let random_word_cell_movement = CELL_MOVEMENTS[OPPOSITE_EXTEND_WORD_ORIENTATION][ACTUAL_DIRECTION];
+          console.log(random_word_cell_movement, '[random word cell movement]');
+          console.log(COMMON_INDEX, '[letter common index]');
+          const START_CELL = p5.Vector.add(SELECTED_LETTER_CELL, p5.Vector.mult(random_word_cell_movement, COMMON_INDEX))
+          let WORD_ANGLES = {'ORIENTATION': OPPOSITE_EXTEND_WORD_ORIENTATION, 'DIRECTION': OPPOSITE_ROTATIONS.DIRECTIONS[ACTUAL_DIRECTION]}
+          random_word_cell_movement = CELL_MOVEMENTS[WORD_ANGLES.ORIENTATION][WORD_ANGLES.DIRECTION];
+          let word_approved = checkWord(random_word, START_CELL, WORD_ANGLES, random_word_cell_movement, SELECTED_LETTER_CELL);
 
-          // ok, lets try fitting this word, this direction...
-          // primero que todo, lo primero que debo hacer
-          // es solo por medio de datos
-          // comprobar que no se esta interponiendo
-          // encima de alguna otra palabra.
+          /*
+          If the word fits, then lets draw it :)
+          Lets count here the number of words that can be drawed
+          and return if we reach that number.
+          */
+          if (word_approved) {
+            if (limit_words_drawed_counter == LIMIT_WORDS_DRAWED-1) return;
+            limit_words_drawed_counter++;
+
+            console.log('********** SUCCESS ' + random_word + '**********');
+            words.splice(words.indexOf(random_word), 1);
+            drawWordNew(random_word, START_CELL, WORD_ANGLES, random_word_cell_movement, SELECTED_LETTER_CELL);
+            break select_random_word_loop;
+          }
         }
       }
     }
   }
 }
 
+/*
+Check if a letter can be used as a connector in a word so the
+connected words aren't too close :)
+*/
+function checkLetterAlgorithm(LETTER_INDEX, SELECTED_LETTER_INDEXES) {
+  let approved = true;
+
+  if (SELECTED_LETTER_INDEXES.includes(LETTER_INDEX)) {
+    approved = false;
+  }
+
+  SELECTED_LETTER_INDEXES.forEach(INDEX => {
+    if (Math.abs(LETTER_INDEX - INDEX) == 1) approved = false;
+  })
+
+  return approved;
+}
+
+/*
+Takes a word and a letter, and returns a list of indexes
+where the letter is in the word. 
+*/
+function getCommonLetterIndexes(WORD, SELECTED_LETTER) {
+  let common_letter_indexes = [];
+  let word_array = [];
+
+  for (const L of WORD) word_array.push(L);
+
+  common_letter_indexes = word_array
+    .map((LETTER, INDEX) => {if (LETTER == SELECTED_LETTER) return INDEX})
+    .filter(INDEX => INDEX != undefined);
+
+  return common_letter_indexes;
+}
+
+/*
+Cheks if this word doesn't overlaps other drawed words :)
+*/
+function checkWord(WORD, START_CELL, WORD_ANGLES, CELL_MOVEMENT, AVOID_CELL) {
+  let approved = true
+  let actual_cell = START_CELL.copy();
+  console.log(WORD_ANGLES, 'WORD_ANGLES');
+  let OPPOSITE_ORIENTATION = OPPOSITE_ROTATIONS.ORIENTATIONS[WORD_ANGLES.ORIENTATION];
+  console.log(WORD_ANGLES.ORIENTATION, OPPOSITE_ORIENTATION, 'OPPOSITE_ORIENTATION****')
+  let word_letter_counter = 0;
+
+  /*
+  Check each one of the letter cells where this word is going to be.
+  */
+  random_word_letter_loop:
+  for (const LETTER of WORD) {
 
 
+    /*
+    Iterate over all the active cells (not available cells)
+    to compare in an appropiate way.
+    */
+    for (const ACTIVE_CELL of active_cells) {
 
+      /*
+      If the actual cell is the common cell (connection cell)
+      then no comparison is neccessary, we can avoid it.
+      */
+      if (!actual_cell.equals(AVOID_CELL)) {
+
+        /*
+        checks that the cell where this letter 
+        is going to be is available. 
+        */
+        if (actual_cell.equals(ACTIVE_CELL)) {
+          approved = false;
+          break random_word_letter_loop;
+        }
+
+
+        /*
+        checks that the cells around the actual cell are availables
+          *(in the oposite orientation).
+        */
+        for (const DIRECTION of ROTATIONS.DIRECTIONS) {
+          let OPPOSITE_ORIENTATION_MOVEMENT = CELL_MOVEMENTS[OPPOSITE_ORIENTATION][DIRECTION];
+
+          const ACTUAL_CELL_AROUND_CHECKER = p5.Vector.add(actual_cell, OPPOSITE_ORIENTATION_MOVEMENT);
+
+          if (ACTUAL_CELL_AROUND_CHECKER.equals(ACTIVE_CELL)) {
+            approved = false;
+            break random_word_letter_loop;
+          }
+        }
+      }
+
+
+      /*
+      If this is the first or the last cell,
+      then check to continuos cells, they must be available too.
+      */
+      if (word_letter_counter == 0) {
+        const OPPOSITE_DIRECTION = OPPOSITE_ROTATIONS.DIRECTIONS[WORD_ANGLES.DIRECTION];
+        const OPPOSITE_MOVEMENT = CELL_MOVEMENTS[WORD_ANGLES.ORIENTATION][OPPOSITE_DIRECTION];
+
+        const CELL_IN_OPPOSITE_DIRECTION = p5.Vector.add(actual_cell, OPPOSITE_MOVEMENT);
+        if (CELL_IN_OPPOSITE_DIRECTION.equals(ACTIVE_CELL)) {
+          approved = false;
+          break random_word_letter_loop;
+        }
+
+      } else if (word_letter_counter == WORD.length-1) {
+        const FOLLOWING_CELL = p5.Vector.add(actual_cell, CELL_MOVEMENT);
+        if (FOLLOWING_CELL.equals(ACTIVE_CELL)) {
+          approved = false;
+          break random_word_letter_loop;
+        }
+      }
+    }
+
+    actual_cell.add(CELL_MOVEMENT);
+    word_letter_counter++;
+  }
+
+  return approved;
+}
+
+
+/*
+Draw a word in the crossword and sets all the necessary data.
+*/
+function drawWordNew(WORD, START_CELL, WORD_ANGLES, CELL_MOVEMENT, COMMON_CELL) {
+  console.log('');
+  console.log('(drawWordNew)');
+  console.log(WORD, '[word to draw]');
+  //console.log(START_CELL, '[start cell]');
+  //console.log(WORD_ANGLES, '[word angles]');
+  //console.log(CELL_MOVEMENT, '[cell movement]');
+  //console.log(COMMON_CELL, '[common cell]');
+  let word_cells = [];
+  let actual_cell = START_CELL.copy();
+
+  for (LETTER of WORD) {
+    if (!actual_cell.equals(COMMON_CELL)) {
+      //console.log(LETTER, 'LETTER');
+      drawLetter(LETTER, actual_cell);
+
+      active_cells.push(actual_cell.copy());
+    }
+    word_cells.push(actual_cell.copy());
+    actual_cell.add(CELL_MOVEMENT);
+  }
+
+  cells_per_word[WORD] = word_cells;
+  words_angles[WORD] = WORD_ANGLES;
+  drawed_words.push(WORD);
+  words_to_extend.push(WORD); // ** DESCOMENTAR ESTO DESPUES.
+  console.log(WORD, '[successfully drawed]');
+  console.log('');
+}
+
+/*
+Creates, positions and sets the input html.
+*/
+function drawLetter(LETTER, CELL) {
+  const CELL_POS = p5.Vector.add(
+    BASE_CELL_POS, p5.Vector.mult(CELL, CELL_SIZE));
+
+
+  const INP = createInput(LETTER);
+  INP.position(CELL_POS.x, CELL_POS.y);
+  INP.size(INPUT_SIZE_HTML, INPUT_SIZE_HTML);
+  INP.input(inputManager);
+}
+
+/*
+How does the input manage the entry data.
+*/
+function inputManager() {
+  let word = this.value();
+  if (word.length == 0) {
+    word = '';
+  } else {
+    this.value(word[0].toUpperCase());
+  }
+  console.log(word);
+}
 
 function drawBorder() {
   // line between soup and WORDS.
@@ -304,3 +484,26 @@ function randomInt(num) {
 
 
 
+
+
+
+
+
+
+/**
+
+function wordMaxPossibleConnections(WORD) {
+    let max = 0;
+
+    // la palabra es par o inpar?
+    // si divido la palabra por dos y el restante es 0, etnocnes es par
+    if (WORD.length % 2 == 0) { // par
+      max = WORD.length / 2;
+    } else {
+      max = ((WORD.length-1)/2)+1;
+    }
+
+    return max;
+  }
+
+*/
