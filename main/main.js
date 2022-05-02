@@ -59,19 +59,49 @@ const CELL_MOVEMENTS = {
 }
 
 
-let cells_per_word = {};
-
-let words_angles = [];
-let drawed_words = [];
-let words_to_extend = [];
-let extended_words = [];
-
 let active_cells = [];
+let cells_per_word = {};
+let words_angles = [];
+let words_to_extend = [];
 
-let mouse = createVector(0, 0);
+const WORD_AUTOFILL_PERCENTAGE_LIMITS = {min: .3, max: .5};
 
-const LIMIT_WORDS_DRAWED = 8;
-let limit_words_drawed_counter = 0;
+
+
+// despues de haber dibujado en datos todas las palabras
+// lo que queda es mirar active cells, y dependiendo de los
+// valores cambiar la posicion del (0,0) para que el crucigrama
+// quede dentro del canvas.
+
+/*
+ademas esto tambien me va a servir para posicionar las descripciones
+*/
+
+
+/* TAREAS POR HACER.
+
+descompletar****
+Las palabras de inicio no debe de comenzar completadas,
+tan solo una parte de la palabra debe estarlo.
+
+input manager***
+cada vez que se cambia, este de comprobar si su grupo de inputs
+completan la palabra correcta, si es asi llamar a markWord function
+
+markWord***
+esta funcion hace algo que haga que la persona identifique
+que la palabra ha sido comletada correctamente.
+
+descripciones****
+dejabo del crucigrama, debe haber una lista de parrafos que
+describen las palabras que van en cada una de las lineas de inputs
+
+*/
+
+//let mouse = createVector(0, 0);
+
+const LIMIT_WORDS = 8;
+let limit_words_counter = 0;
 
 
 
@@ -82,17 +112,16 @@ function setup() {
   const CNV = createCanvas(CANVAS_SIZE.x, CANVAS_SIZE.y);
   CNV.parent('canva-game');
 
-  angleMode(DEGREES);
-  frameRate(30);
+  //frameRate(30);
   restartGame();
 }
 
 function restartGame() {
-  drawBorder();
-  createCrossword()
+  //drawBorder();
+  crossword()
 }
 
-function createCrossword() {
+function crossword() {
   drawWord('CROSSWORD', BASE_CELL, {'ORIENTATION': 'HORIZONTAL', 'DIRECTION': 'STRAIGHT'}, createVector(1000, 1000));
 
   for (WORD of words_to_extend) {
@@ -104,52 +133,29 @@ function createCrossword() {
     console.log('');
     console.log(WORD, 'WORD');
     console.log('');
-    console.log(limit_words_drawed_counter,'limit_words_drawed_counter');
-    if (limit_words_drawed_counter == LIMIT_WORDS_DRAWED-1) break;
     
 
-
-
-    // QUÉ hace esto?
-    // conecta un numero aleatoreo de palabras a esta palabra
-    // y las dibuja luego pasan por esta misma función.
-
-
-    // que tal si en vez de dibujarlas
-    // simplemente las guardo en una lista
-    // y luego si las dibujo.
-
-    // basicamente esto de aqui toma una palabra
-    // y enchufa un numero de palabras aleatoreas a ella.
-
-
-    // aun que en vez de dibujarlas, preferiria simplemente
-    // que als guardara en una lista.
-
-    // para luego por aparte dibujarlas.
-
-    // MEJOR DICHO METER ESTO UN UNA FUNCION
-    // Y LUEGO QUE ME DEVUELVA UNA LISTA CON LAS PALABRAS
-    // PARA ENCHUFAR EN ELLA, CON TODOS LOS DATOS AHÍ.
-
-    
-    drawPluggableWords(WORD);
+    const FIND_LETTER_TRIES = 6;
+    const FIND_PLUGGABLE_WORD_TRIES = 20;
+    const PLUGGABLE_WORDS = getPluggableWords(WORD, FIND_LETTER_TRIES, FIND_PLUGGABLE_WORD_TRIES);
+    const LIMIT_WORDS_ACHIVED = drawPluggableWords(PLUGGABLE_WORDS);
+    if (LIMIT_WORDS_ACHIVED) break;
   }
 }
 
-function drawPluggableWords(WORD) {
+function getPluggableWords(WORD, FIND_LETTER_TRIES, FIND_PLUGGABLE_WORD_TRIES) {
+
+
+
+  let pluggable_words = {};
   let selected_indexes = [];
-
-  const LETTER_TRIES = 6;
-  const SELECT_RANDOM_WORD_TRIES = 20;
-
   
   /*
   try random letters of this word and check if we can use them
   with a crucigrama algorithm, *(not all the letters can be used).
   */
-  for (let a=0; a < LETTER_TRIES; a++) {
-    console.log('********** TRY (' + a + '/' + LETTER_TRIES + ') **********');
+  for (let a=0; a < FIND_LETTER_TRIES; a++) {
+    console.log('********** TRY (' + a + '/' + FIND_LETTER_TRIES + ') **********');
     const [LETTER_SUCCESS, SELECTED_LETTER, SELECTED_LETTER_INDEX] = tryGettingRandomValidLetter(WORD, selected_indexes);
     if (!LETTER_SUCCESS) continue;
 
@@ -159,7 +165,7 @@ function drawPluggableWords(WORD) {
     Look for a word that can be plugged in with the selected letter
     */
     get_target_word_loop:
-    for (let b=0; b < SELECT_RANDOM_WORD_TRIES; b++) {
+    for (let b=0; b < FIND_PLUGGABLE_WORD_TRIES; b++) {
       const [PLUGGABLE_WORD_SUCCESS, PLUGGABLE_WORD, PLUGGABLE_WORD_REPEATED_LETTER_INDEXES] =tryGettingRandomValidPluggableWord(SELECTED_LETTER)
       if (!PLUGGABLE_WORD_SUCCESS) continue;
       
@@ -178,7 +184,14 @@ function drawPluggableWords(WORD) {
       */
       for (const REPEATED_LETTER_INDEX of PLUGGABLE_WORD_REPEATED_LETTER_INDEXES) {
         //try fitting the word in both directions.
-        for (const ACTUAL_DIRECTION of ANGLES.DIRECTIONS) {
+        // la direccion debo hacerla aleatoria.
+        let random_directions = ANGLES.DIRECTIONS.slice();
+        // necesito un random de 0 a uno
+        const RANDOM_DIRECTION_INDEX = randomInt(random_directions.length);
+        const poped_direction = random_directions.splice(RANDOM_DIRECTION_INDEX, 1);
+        random_directions.push(poped_direction);
+
+        for (const ACTUAL_DIRECTION of random_directions) {
           const [FIT_SUCCESS, START_CELL, PLUGGABLE_WORD_ANGLES, CELL_MOVEMENT] = checkFittingPluggableWord(PLUGGABLE_WORD,OPPOSITE_WORD_ORIENTATION,ACTUAL_DIRECTION, SELECTED_LETTER_CELL, REPEATED_LETTER_INDEX);
 
 
@@ -188,238 +201,334 @@ function drawPluggableWords(WORD) {
           Lets count here the number of words that can be drawed
           and return if we reach that number.
           */
-          if (FIT_SUCCESS) {
-            if (limit_words_drawed_counter == LIMIT_WORDS_DRAWED-1) return;
-            limit_words_drawed_counter++;
-
+          if (FIT_SUCCESS) { 
             console.log('********* SUCCESS ' + PLUGGABLE_WORD + '*********');
             words.splice(words.indexOf(PLUGGABLE_WORD), 1);
-            drawWord(PLUGGABLE_WORD, START_CELL, PLUGGABLE_WORD_ANGLES, CELL_MOVEMENT, SELECTED_LETTER_CELL);
+
+            pluggable_words[PLUGGABLE_WORD] = {'START_CELL': START_CELL.copy(), 'WORD_ANGLES': PLUGGABLE_WORD_ANGLES, 'CONNECTION_CELL': SELECTED_LETTER_CELL.copy()}
             break get_target_word_loop;
           }
         }
       }
     }
   }
-}
+
+  return pluggable_words;
+
+  function tryGettingRandomValidLetter(WORD, SELECTED_INDEXES) {
+    let success = true;
+    const RANDOM_INDEX = randomInt(WORD.length);
+    const SELECTED_LETTER = WORD[RANDOM_INDEX];
+    
+    if (SELECTED_INDEXES.includes(RANDOM_INDEX)) success = false;
+    for (const INDEX of SELECTED_INDEXES) {
+      // If the letters are too close the letter is nos valid.
+      if (Math.abs(RANDOM_INDEX - INDEX) == 1) {
+        success = false
+        break;
+      }
+    }
+    
+    console.log(SELECTED_INDEXES.length, '[selected indexes length]');
+    console.log(RANDOM_INDEX, '[random index]');
+    console.log(SELECTED_LETTER, '[selected letter]');
+
+    return [success, SELECTED_LETTER, RANDOM_INDEX];
+  }
+
+  function tryGettingRandomValidPluggableWord(SELECTED_LETTER) {
+
+    let success = true;
+    const PLUGGABLE_WORD = random(words);
+    let letter_indexes;
+
+    if (PLUGGABLE_WORD.includes(SELECTED_LETTER)) {
+      letter_indexes = getLetterIndexes(PLUGGABLE_WORD, SELECTED_LETTER);
+      console.log(letter_indexes.length, '[common letters]')
+    } else {
+      success = false;
+    }
 
 
-/*
-  Check if a letter can be used as a connector in a word so the
-  connected words aren't too close :)
+    console.log(PLUGGABLE_WORD, '[plugabble word]');
 
-  return the selected valid letter or null.
-  */
-function tryGettingRandomValidLetter(WORD, SELECTED_INDEXES) {
-  let success = true;
-  const RANDOM_INDEX = randomInt(WORD.length);
-  const SELECTED_LETTER = WORD[RANDOM_INDEX];
-  
-  if (SELECTED_INDEXES.includes(RANDOM_INDEX)) success = false;
-  for (const INDEX of SELECTED_INDEXES) {
-    // If the letters are too close the letter is nos valid.
-    if (Math.abs(RANDOM_INDEX - INDEX) == 1) {
-      success = false
-      break;
+    return [success, PLUGGABLE_WORD, letter_indexes];
+
+    function getLetterIndexes(WORD, LETTER) {
+      /*
+      Takes a word and a letter, and returns a list of indexes
+      where the letter is in the word. 
+      */
+      let indexes = [];
+      let word_array = [];
+
+      for (const L of WORD) word_array.push(L);
+
+      indexes = word_array
+        .map((L, INDEX) => {if (L == LETTER) return INDEX})
+        .filter(INDEX => INDEX != undefined);
+
+      return indexes;
     }
   }
-  
-  console.log(SELECTED_INDEXES.length, '[selected indexes length]');
-  console.log(RANDOM_INDEX, '[random index]');
-  console.log(SELECTED_LETTER, '[selected letter]');
 
-  return [success, SELECTED_LETTER, RANDOM_INDEX];
-}
+  function checkFittingPluggableWord(PLUGGABLE_WORD, OPPOSITE_ORIENTATION, ACTUAL_DIRECTION, CONNECTION_CELL, LETTER_INDEX) {
+    let success = true
 
-function tryGettingRandomValidPluggableWord(SELECTED_LETTER) {
-  function getLetterIndexes(WORD, LETTER) {
-    /*
-    Takes a word and a letter, and returns a list of indexes
-    where the letter is in the word. 
-    */
-    let indexes = [];
-    let word_array = [];
+    const INVERSE_CELL_MOVEMENT = CELL_MOVEMENTS[OPPOSITE_ORIENTATION][ACTUAL_DIRECTION];
+    const START_CELL = p5.Vector.add(CONNECTION_CELL, p5.Vector.mult(INVERSE_CELL_MOVEMENT, LETTER_INDEX))
+    
+    const PLUGGABLE_WORD_ANGLES = {'ORIENTATION': OPPOSITE_ORIENTATION, 'DIRECTION': OPPOSITE_ANGLES.DIRECTIONS[ACTUAL_DIRECTION]}
+    const CELL_MOVEMENT = CELL_MOVEMENTS[PLUGGABLE_WORD_ANGLES.ORIENTATION][PLUGGABLE_WORD_ANGLES.DIRECTION];
 
-    for (const L of WORD) word_array.push(L);
+    console.log(OPPOSITE_ORIENTATION, '[opposite word orientation]');
+    console.log(ACTUAL_DIRECTION, '[random direction]');
 
-    indexes = word_array
-      .map((L, INDEX) => {if (L == LETTER) return INDEX})
-      .filter(INDEX => INDEX != undefined);
-
-    return indexes;
-  }
-
-  let success = true;
-  const PLUGGABLE_WORD = random(words);
-  let letter_indexes;
-
-  if (PLUGGABLE_WORD.includes(SELECTED_LETTER)) {
-    letter_indexes = getLetterIndexes(PLUGGABLE_WORD, SELECTED_LETTER);
-    console.log(letter_indexes.length, '[common letters]')
-  } else {
-    success = false;
-  }
-
-
-  console.log(PLUGGABLE_WORD, '[plugabble word]');
-
-  return [success, PLUGGABLE_WORD, letter_indexes];
-}
-
-function checkFittingPluggableWord(PLUGGABLE_WORD, OPPOSITE_ORIENTATION, ACTUAL_DIRECTION, CONNECTION_CELL, LETTER_INDEX) {
-  let success = true
-
-  const INVERSE_CELL_MOVEMENT = CELL_MOVEMENTS[OPPOSITE_ORIENTATION][ACTUAL_DIRECTION];
-  const START_CELL = p5.Vector.add(CONNECTION_CELL, p5.Vector.mult(INVERSE_CELL_MOVEMENT, LETTER_INDEX))
-  
-  const PLUGGABLE_WORD_ANGLES = {'ORIENTATION': OPPOSITE_ORIENTATION, 'DIRECTION': OPPOSITE_ANGLES.DIRECTIONS[ACTUAL_DIRECTION]}
-  const CELL_MOVEMENT = CELL_MOVEMENTS[PLUGGABLE_WORD_ANGLES.ORIENTATION][PLUGGABLE_WORD_ANGLES.DIRECTION];
-
-  console.log(OPPOSITE_ORIENTATION, '[opposite word orientation]');
-  console.log(ACTUAL_DIRECTION, '[random direction]');
-
-  console.log(CELL_MOVEMENT, '[random word cell movement]');
-  console.log(LETTER_INDEX, '[repeated letter index]');
+    console.log(CELL_MOVEMENT, '[random word cell movement]');
+    console.log(LETTER_INDEX, '[repeated letter index]');
 
 
 
-  let actual_cell = START_CELL.copy();
-  console.log(PLUGGABLE_WORD_ANGLES, 'PLUGGABLE_WORD_ANGLES');
-  let PLUGGABLE_OPPOSITE_ORIENTATION = OPPOSITE_ANGLES.ORIENTATIONS[PLUGGABLE_WORD_ANGLES.ORIENTATION];
-  console.log(PLUGGABLE_WORD_ANGLES.ORIENTATION, PLUGGABLE_OPPOSITE_ORIENTATION, 'PLUGGABLE_OPPOSITE_ORIENTATION****')
-  let word_letter_counter = 0;
-
-  /*
-  Check each one of the letter cells where this word is going to be.
-  */
-  random_word_letter_loop:
-  for (const LETTER of PLUGGABLE_WORD) {
-
+    let actual_cell = START_CELL.copy();
+    console.log(PLUGGABLE_WORD_ANGLES, 'PLUGGABLE_WORD_ANGLES');
+    let PLUGGABLE_OPPOSITE_ORIENTATION = OPPOSITE_ANGLES.ORIENTATIONS[PLUGGABLE_WORD_ANGLES.ORIENTATION];
+    console.log(PLUGGABLE_WORD_ANGLES.ORIENTATION, PLUGGABLE_OPPOSITE_ORIENTATION, 'PLUGGABLE_OPPOSITE_ORIENTATION****')
+    let word_letter_counter = 0;
 
     /*
-    Iterate over all the active cells (not available cells)
-    to compare in an appropiate way.
+    Check each one of the letter cells where this word is going to be.
     */
-    for (const ACTIVE_CELL of active_cells) {
+    random_word_letter_loop:
+    for (const LETTER of PLUGGABLE_WORD) {
+
 
       /*
-      If the actual cell is the common cell (connection cell)
-      then no comparison is neccessary, we can avoid it.
+      Iterate over all the active cells (not available cells)
+      to compare in an appropiate way.
       */
-      if (!actual_cell.equals(CONNECTION_CELL)) {
+      for (const ACTIVE_CELL of active_cells) {
 
         /*
-        checks that the cell where this letter 
-        is going to be is available. 
+        If the actual cell is the common cell (connection cell)
+        then no comparison is neccessary, we can avoid it.
         */
-        if (actual_cell.equals(ACTIVE_CELL)) {
-          success = false;
-          break random_word_letter_loop;
+        if (!actual_cell.equals(CONNECTION_CELL)) {
+
+          /*
+          checks that the cell where this letter 
+          is going to be is available. 
+          */
+          if (actual_cell.equals(ACTIVE_CELL)) {
+            success = false;
+            break random_word_letter_loop;
+          }
+
+
+          /*
+          checks that the cells around the actual cell are availables
+            *(in the oposite orientation).
+          */
+          for (const DIRECTION of ANGLES.DIRECTIONS) {
+            let OPPOSITE_ORIENTATION_MOVEMENT = CELL_MOVEMENTS[PLUGGABLE_OPPOSITE_ORIENTATION][DIRECTION];
+
+            const ACTUAL_CELL_AROUND_CHECKER = p5.Vector.add(actual_cell, OPPOSITE_ORIENTATION_MOVEMENT);
+
+            if (ACTUAL_CELL_AROUND_CHECKER.equals(ACTIVE_CELL)) {
+              success = false;
+              break random_word_letter_loop;
+            }
+          }
         }
 
 
         /*
-        checks that the cells around the actual cell are availables
-          *(in the oposite orientation).
+        If this is the first or the last cell,
+        then check to continuos cells, they must be available too.
         */
-        for (const DIRECTION of ANGLES.DIRECTIONS) {
-          let OPPOSITE_ORIENTATION_MOVEMENT = CELL_MOVEMENTS[PLUGGABLE_OPPOSITE_ORIENTATION][DIRECTION];
+        if (word_letter_counter == 0) {
+          const OPPOSITE_DIRECTION = OPPOSITE_ANGLES.DIRECTIONS[PLUGGABLE_WORD_ANGLES.DIRECTION];
+          const OPPOSITE_MOVEMENT = CELL_MOVEMENTS[PLUGGABLE_WORD_ANGLES.ORIENTATION][OPPOSITE_DIRECTION];
 
-          const ACTUAL_CELL_AROUND_CHECKER = p5.Vector.add(actual_cell, OPPOSITE_ORIENTATION_MOVEMENT);
+          const CELL_IN_OPPOSITE_DIRECTION = p5.Vector.add(actual_cell, OPPOSITE_MOVEMENT);
+          if (CELL_IN_OPPOSITE_DIRECTION.equals(ACTIVE_CELL)) {
+            success = false;
+            break random_word_letter_loop;
+          }
 
-          if (ACTUAL_CELL_AROUND_CHECKER.equals(ACTIVE_CELL)) {
+        } else if (word_letter_counter == PLUGGABLE_WORD.length-1) {
+          const FOLLOWING_CELL = p5.Vector.add(actual_cell, CELL_MOVEMENT);
+          if (FOLLOWING_CELL.equals(ACTIVE_CELL)) {
             success = false;
             break random_word_letter_loop;
           }
         }
       }
 
-
-      /*
-      If this is the first or the last cell,
-      then check to continuos cells, they must be available too.
-      */
-      if (word_letter_counter == 0) {
-        const OPPOSITE_DIRECTION = OPPOSITE_ANGLES.DIRECTIONS[PLUGGABLE_WORD_ANGLES.DIRECTION];
-        const OPPOSITE_MOVEMENT = CELL_MOVEMENTS[PLUGGABLE_WORD_ANGLES.ORIENTATION][OPPOSITE_DIRECTION];
-
-        const CELL_IN_OPPOSITE_DIRECTION = p5.Vector.add(actual_cell, OPPOSITE_MOVEMENT);
-        if (CELL_IN_OPPOSITE_DIRECTION.equals(ACTIVE_CELL)) {
-          success = false;
-          break random_word_letter_loop;
-        }
-
-      } else if (word_letter_counter == PLUGGABLE_WORD.length-1) {
-        const FOLLOWING_CELL = p5.Vector.add(actual_cell, CELL_MOVEMENT);
-        if (FOLLOWING_CELL.equals(ACTIVE_CELL)) {
-          success = false;
-          break random_word_letter_loop;
-        }
-      }
+      actual_cell.add(CELL_MOVEMENT);
+      word_letter_counter++;
     }
 
-    actual_cell.add(CELL_MOVEMENT);
-    word_letter_counter++;
+    return [success, START_CELL, PLUGGABLE_WORD_ANGLES, CELL_MOVEMENT];
   }
-
-  return [success, START_CELL, PLUGGABLE_WORD_ANGLES, CELL_MOVEMENT];
 }
 
-/*
-Draw a word in the crossword and sets all the necessary data.
-*/
-function drawWord(WORD, START_CELL, WORD_ANGLES, CONNECTION_CELL) {
+function drawPluggableWords(PLUGGABLE_WORDS) {
+  console.log('');
+  console.log('(drawPluggableWords)');
+  console.log(Object.keys(PLUGGABLE_WORDS));
+  
+  let limit_words_achived = false
+
+  const PLUGGABLE_WORDS_KEYS = Object.keys(PLUGGABLE_WORDS);
+  for (const PLUGGABLE_WORD of PLUGGABLE_WORDS_KEYS) {
+    const PLUGGABLE_WORD_DATA = PLUGGABLE_WORDS[PLUGGABLE_WORD]
+    if (limit_words_counter == LIMIT_WORDS-1) {
+      limit_words_achived = true;
+      return limit_words_achived;
+    }
+    limit_words_counter++;
+
+    drawWord(PLUGGABLE_WORD, PLUGGABLE_WORD_DATA.START_CELL, PLUGGABLE_WORD_DATA.WORD_ANGLES, PLUGGABLE_WORD_DATA.CONNECTION_CELL);
+  }
+
+  return limit_words_achived;
+}
+
+function drawWordImaginary(WORD, START_CELL, WORD_ANGLES, CONNECTION_CELL) {
+  let word_array = [];
+  for (const LETTER of WORD) word_array.push(LETTER);
+  let word_cells = [];
+  const WORD_INDEXES_FOR_AUTOFILL = getIndexesForAutofill(word_array);
 
   const CELL_MOVEMENT = CELL_MOVEMENTS[WORD_ANGLES.ORIENTATION][WORD_ANGLES.DIRECTION];
 
-  let word_cells = [];
   let actual_cell = START_CELL.copy();
 
-  for (LETTER of WORD) {
-    if (!actual_cell.equals(CONNECTION_CELL)) {
-      //console.log(LETTER, 'LETTER');
-      drawLetter(LETTER, actual_cell);
+  word_array.forEach((LETTER, LETTER_INDEX) => {
+    const CELL_POS = p5.Vector.add(
+      BASE_CELL_POS, p5.Vector.mult(actual_cell, CELL_SIZE));
 
-      active_cells.push(actual_cell.copy());
-    }
+    const AUTOFILL = WORD_INDEXES_FOR_AUTOFILL.includes(LETTER_INDEX) ? true : false;
+
+    if (!actual_cell.equals(CONNECTION_CELL)) {
+      drawLetter(LETTER, CELL_POS, AUTOFILL);
+      active_cells.push(actual_cell.copy());}
+    if (LETTER_INDEX == 0) drawBeginningIndicator(CELL_POS, WORD_ANGLES);
+
     word_cells.push(actual_cell.copy());
     actual_cell.add(CELL_MOVEMENT);
-  }
+  })
 
   cells_per_word[WORD] = word_cells;
   words_angles[WORD] = WORD_ANGLES;
-  drawed_words.push(WORD);
   words_to_extend.push(WORD);
   console.log(WORD, '[successfully drawed]');
   console.log('');
 }
 
-function drawLetter(LETTER, CELL) {
-  function inputManager() {
-    /*
-    How does the input manage the entry data.
-    */
-    let word = this.value();
-    if (word.length == 0) {
-      word = '';
-    } else {
-      this.value(word[0].toUpperCase());
+function drawWord(WORD, START_CELL, WORD_ANGLES, CONNECTION_CELL) {
+  let word_array = [];
+  for (const LETTER of WORD) word_array.push(LETTER);
+  let word_cells = [];
+  const WORD_INDEXES_FOR_AUTOFILL = getIndexesForAutofill(word_array);
+
+  const CELL_MOVEMENT = CELL_MOVEMENTS[WORD_ANGLES.ORIENTATION][WORD_ANGLES.DIRECTION];
+
+  let actual_cell = START_CELL.copy();
+
+  word_array.forEach((LETTER, LETTER_INDEX) => {
+    const CELL_POS = p5.Vector.add(
+      BASE_CELL_POS, p5.Vector.mult(actual_cell, CELL_SIZE));
+
+    const AUTOFILL = WORD_INDEXES_FOR_AUTOFILL.includes(LETTER_INDEX) ? true : false;
+
+    if (!actual_cell.equals(CONNECTION_CELL)) {
+      drawLetter(LETTER, CELL_POS, AUTOFILL);
+      active_cells.push(actual_cell.copy());}
+    if (LETTER_INDEX == 0) drawBeginningIndicator(CELL_POS, WORD_ANGLES);
+
+    word_cells.push(actual_cell.copy());
+    actual_cell.add(CELL_MOVEMENT);
+  })
+
+  cells_per_word[WORD] = word_cells;
+  words_angles[WORD] = WORD_ANGLES;
+  words_to_extend.push(WORD);
+  console.log(WORD, '[successfully drawed]');
+  console.log('');
+
+  function drawBeginningIndicator(CELL_POS, WORD_ANGLES) {
+    // este span solo se dibuja en la primera letra
+    let SPAN = createSpan(limit_words_counter+1);
+
+    // AHORA NO LA POSICIONES ENCIMA, SINO DETRAS
+    // A CONTRA DIRECCIÓN.
+    const BACK_MOVEMENT_AMOUNTS = {
+      [ANGLES.ORIENTATIONS[0]]: {
+        [ANGLES.DIRECTIONS[0]]: createVector(30,4), 
+        [ANGLES.DIRECTIONS[1]]: createVector(-9,4)},
+      [ANGLES.ORIENTATIONS[1]]: {
+        [ANGLES.DIRECTIONS[0]]: createVector(8,25), 
+        [ANGLES.DIRECTIONS[1]]: createVector(8,-16)}
     }
-    console.log(word);
+
+    const BACK_MOVEMENT = CELL_MOVEMENTS[WORD_ANGLES.ORIENTATION][OPPOSITE_ANGLES.DIRECTIONS[WORD_ANGLES.DIRECTION]];
+    const BACK_AMOUNT = BACK_MOVEMENT_AMOUNTS[WORD_ANGLES.ORIENTATION][OPPOSITE_ANGLES.DIRECTIONS[WORD_ANGLES.DIRECTION]];
+    const BACK_POS = p5.Vector.add(BACK_MOVEMENT, BACK_AMOUNT);
+
+    CELL_POS.add(BACK_POS);
+    SPAN.position(CELL_POS.x,CELL_POS.y);
   }
+
   /*
   Creates, positions and sets the input html.
   */
-  const CELL_POS = p5.Vector.add(
-    BASE_CELL_POS, p5.Vector.mult(CELL, CELL_SIZE));
+  function drawLetter(LETTER, CELL_POS, AUTOFILL) {
+    const INP = createInput(AUTOFILL ? LETTER : '');
+    INP.position(CELL_POS.x, CELL_POS.y);
+    INP.size(INPUT_SIZE_HTML, INPUT_SIZE_HTML);
+    INP.input(inputManager);
 
 
-  const INP = createInput(LETTER);
-  INP.position(CELL_POS.x, CELL_POS.y);
-  INP.size(INPUT_SIZE_HTML, INPUT_SIZE_HTML);
-  INP.input(inputManager);
+    /*
+    How does the input manage the entry data.
+    */
+    function inputManager() {
+      let word = this.value();
+      if (word.length == 0) {
+        word = '';
+      } else {
+        this.value(word[word.length-1].toUpperCase());
+      }
+      console.log(word);
+    }
+  }
+
+  function getIndexesForAutofill(WORD_ARRAY) {
+    let word_indexes_for_autofill = []
+    WORD_ARRAY.forEach((LETTER, INDEX) => {
+      word_indexes_for_autofill.push(INDEX);
+    })
+
+    console.log(word_indexes_for_autofill, '**************************************************************************************************************************');
+
+    const RANDOM_AUTOFILL_PERCENTAGE = random(WORD_AUTOFILL_PERCENTAGE_LIMITS.min, WORD_AUTOFILL_PERCENTAGE_LIMITS.max);
+    const WORD_LETTER_AMOUNT_AUTOFILL_BY_PERCENTAGE = Math.floor((WORD.length-1) * RANDOM_AUTOFILL_PERCENTAGE);
+
+    console.log(RANDOM_AUTOFILL_PERCENTAGE, WORD_LETTER_AMOUNT_AUTOFILL_BY_PERCENTAGE, '**************************************************************************************************************************');
+
+
+    let autofill_counter = 0;
+    while (autofill_counter < (WORD.length-1) - WORD_LETTER_AMOUNT_AUTOFILL_BY_PERCENTAGE) {
+      const RANDOM_INDEX = randomInt(word_indexes_for_autofill.length);
+      word_indexes_for_autofill.splice(RANDOM_INDEX, 1);
+      autofill_counter++;
+    }
+    console.log(word_indexes_for_autofill, '**************************************************************************************************************************');
+
+    return word_indexes_for_autofill;
+  }
 }
-
 
 function drawBorder() {
   // line between soup and WORDS.
