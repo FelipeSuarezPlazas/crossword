@@ -8,28 +8,87 @@ new p5();
 
 const CANVAS_SIZE = createVector(500, 800);
 
-const ALL_WORDS = [
-  'apartment', 'glass', 'keyboard', 'windows', 'mac', 'microsoft',
-  'apple', 'pencil', 'tablet', 'light', 'tennis', 'clothes',
-  'screen', 'human', 'portfolio', 'discover', 'fish', 'scissors',
-  'room', 'layer', 'crazy', 'sword', 'helmet', 'charger', 'internet',
-  'league', 'videogame', 'water', 'gun', 'clock', 'careful', 'mouse',
-  'alphabet', 'fork', 'movie', 'theater', 'animal', 'kitchen',
-  'programming', 'sublime', 'awesome', 'wisdom', 'character',
-  'luxury', 'netflix', 'six', 'suitcase', 'store', 'street',
-  'gorgeous', 'cute', 'tokyo', 'anime', 'picture', 'wooden', 'dollar',
-  'murder', 'bulldozer', 'technology', 'blockchain', 'bitcoin',
-  'brick', 'design', 'thinking', 'universe', 'parody', 'question',
-  'answer', 'contemporary', 'travel', 'incredible'
-];
 
-let words = ALL_WORDS.map(WORD => {
+const DESCRIPTIONS = {
+  'apartment': 'A set of rooms for someone to live in on one level of a building or house', 
+  'glass': 'A hard, clear substance that objects such as windows and bottles are made of', 
+  'keyboard': 'A set of keys on a computer that you press to make it work, or the rows of keys on a piano', 
+  'mac': 'Computer made by apple', 
+  'microsoft': 'The largest vendor of computer software in the world. It is also a leading provider of cloud computing services, video games, computer, etc...',
+  'apple': 'A hard, round fruit with a green or red skin', 
+  'pencil': 'A long, thin wooden object with a black or coloured point that you write or draw with', 
+  'tablet': 'A small, round thing containing medicine that you swallow', 
+  'light': 'The brightness that shines from the sun, from fire, or from an object, allowing you to see things', 
+  'tennis': 'A sport in which two or four people hit a small ball to each other over a net', 
+  'clothes': 'Things such as shirts and trousers that you wear on your body',
+  'screen': 'The part of a television or computer that shows images or writing', 
+  'human': 'A man, woman, or child', 
+  'portfolio': 'A collection of drawings, documents, etc. that represent a person’s, especially an artist’s, work', 
+  'discover': 'To find something or get information about something for the first time', 
+  'fish': 'An animal that lives only in water',
+  'sushi': 'A type of Japanese food consisting of squares or balls of cold boiled rice, with small pieces of other food, especially raw fish, on top or rolled inside',
+  'scissors': 'A tool for cutting paper, hair, etc. that you hold in your hand and that has two blades',
+  'room': 'A part of the inside of a building that is separated from other parts by walls, floors, and ceilings', 
+  'layer': 'something that covers a surface, or something that is between two things', 
+  'crazy': 'stupid or strange', 
+  'sword': 'A weapon with a long metal blade and a handle, used especially in the past', 
+  'helmet': 'A hard hat that protects your head', 
+  'charger': 'A piece of equipment used for putting electricity in a battery', 
+  'internet': 'A worldwide system of computer networks used to exchange information',
+  'league': 'A group of teams that compete against each other in a sport', 
+  'videogame': 'A game that involves controlling images on a computer or TV screen', 
+  'water': 'The clear liquid that falls from the sky as rain and that is in seas, lakes, and rivers', 
+  'gun': 'A weapon that you fire bullets out of', 
+  'clock': 'A piece of equipment that shows you what time it is', 
+  'danger': 'The possibility that someone will be harmed or killed', 
+  'mouse': 'A small animal with fur and a long, thin tail',
+  'alphabet': 'A set of letters used for writing a language', 
+  'fork': 'A small tool with three or four points and a handle, used to eat with', 
+  'movie': 'A story that is shown in moving pictures on a screen, usually at a cinema or on television', 
+  'theater': 'A place where plays are performed', 
+  'animal': 'Anything that lives and moves, including people, birds, etc.', 
+  'kitchen': 'A room used to prepare and cook food in',
+  'programming': 'The activity of writing computer programs', 
+  'sublime': 'Extremely good, beautiful, or enjoyable', 
+  'awesome': 'Very big or special and making you feel respect, admiration, or fear', 
+  'wisdom': 'The ability to use your knowledge and experience to make good decisions', 
+  'character': 'The qualities that make one person or thing different from another',
+  'luxury': 'Very expensive and beautiful things', 
+  'netflix': 'Very famous platform to watch online movies',
+  'suitcase': 'A rectangular case with a handle that you use for carrying clothes when you are travelling', 
+  'store': 'A building or part of a building where you can buy things', 
+  'street': 'A road in a town or city that has houses or other buildings',
+  'gorgeous': 'Very beautiful or pleasant', 
+  'cute': '(Especially of something or someone small or young) pleasant and attractive', 
+  'tokyo': 'Capital city of Japan', 
+  'anime': 'Japanese films made using characters and images that are drawn rather than real, or one of these films', 
+  'picture': 'A drawing, painting, or photograph of something or someone', 
+  'wood': 'The hard material that trees are made of', 
+  'dollar': 'The unit of money used in the US, Canada, and some other countries. The symbol is $.',
+  'murder': 'The crime of killing someone', 
+  'bulldozer': 'A heavy vehicle with a large blade in front, used for pushing earth and stones away and for making areas of ground flat at the same time', 
+  'technology': 'Knowledge, equipment, and methods that are used in science and industry', 
+  'blockchain': 'A system used to make a digital record of all the occasions a cryptocurrency (= a digital currency such as bitcoin) is bought or sold, and that is constantly growing as more blocks are added', 
+  'bitcoin': 'A brand name for a type of cryptocurrency (= a digital currency that is produced by a public network rather than any government and uses special codes to keep it secure)',
+  'brick': 'A rectangular block of hard material used for building walls and houses', 
+  'design': 'To make or draw plans for something, for example clothes or buildings', 
+  'thinking': 'The activity of using your mind to consider something:', 
+  'universe': 'Everything that exists, especially all physical matter, including all the stars, planets, galaxies, etc. in space:', 
+  'parody': 'Writing, music, art, speech, etc. that intentionally copies the style of someone famous or copies a particular situation, making the features or qualities of the original more noticeable in a way that is humorous', 
+  'question': 'A sentence or phrase used to find out information',
+  'answer': 'A reaction to a question, letter, phone call, etc...', 
+  'contemporary': 'Existing or happening now, and therefore seeming modern', 
+  'travel': 'To make a journey, usually over a long distance:', 
+  'banquet': 'A large formal meal for many people, often followed by speeches in honour of someone:',
+}
+
+let words = Object.keys(DESCRIPTIONS).map(WORD => {
   return WORD.toUpperCase();
   //console.log(WORD);
 })
 
 const BASE_CELL = createVector(0,0);
-const BASE_CELL_POS = createVector(300,300);
+let base_cell_pos = createVector(0, 0);
 const INPUT_SIZE_HTML = 20;
 const CELL_SIZE = (INPUT_SIZE_HTML/2) + INPUT_SIZE_HTML;
 
@@ -67,23 +126,10 @@ let words_to_extend = [];
 const WORD_AUTOFILL_PERCENTAGE_LIMITS = {min: .3, max: .5};
 
 
-
-// despues de haber dibujado en datos todas las palabras
-// lo que queda es mirar active cells, y dependiendo de los
-// valores cambiar la posicion del (0,0) para que el crucigrama
-// quede dentro del canvas.
-
-/*
-ademas esto tambien me va a servir para posicionar las descripciones
-*/
+let words_data = {};
 
 
 /* TAREAS POR HACER.
-
-descompletar****
-Las palabras de inicio no debe de comenzar completadas,
-tan solo una parte de la palabra debe estarlo.
-
 input manager***
 cada vez que se cambia, este de comprobar si su grupo de inputs
 completan la palabra correcta, si es asi llamar a markWord function
@@ -122,7 +168,10 @@ function restartGame() {
 }
 
 function crossword() {
-  drawWord('CROSSWORD', BASE_CELL, {'ORIENTATION': 'HORIZONTAL', 'DIRECTION': 'STRAIGHT'}, createVector(1000, 1000));
+  const RANDOM_INDEX = randomInt(words.length);
+  const RANDOM_WORD = words[RANDOM_INDEX];
+  words.splice(RANDOM_INDEX, 1);
+  setWordData(RANDOM_WORD, BASE_CELL, {'ORIENTATION': 'HORIZONTAL', 'DIRECTION': 'STRAIGHT'}, createVector(1000, 1000));
 
   for (WORD of words_to_extend) {
     console.log('');
@@ -137,10 +186,77 @@ function crossword() {
 
     const FIND_LETTER_TRIES = 6;
     const FIND_PLUGGABLE_WORD_TRIES = 20;
-    const PLUGGABLE_WORDS = getPluggableWords(WORD, FIND_LETTER_TRIES, FIND_PLUGGABLE_WORD_TRIES);
-    const LIMIT_WORDS_ACHIVED = drawPluggableWords(PLUGGABLE_WORDS);
+    const PLUGGABLE_WORDS_DATA = getPluggableWords(WORD, FIND_LETTER_TRIES, FIND_PLUGGABLE_WORD_TRIES);
+    const LIMIT_WORDS_ACHIVED = setPluggableWordsData(PLUGGABLE_WORDS_DATA);
     if (LIMIT_WORDS_ACHIVED) break;
   }
+
+  setBaseCellPos();
+  drawCrossword();
+  drawDescriptions();
+}
+
+function setBaseCellPos() {
+  let smallest_cell = createVector(0,0);
+  for (const ACTIVE_CELL of active_cells) {
+    if (ACTIVE_CELL.x < smallest_cell.x) {
+      smallest_cell.x = ACTIVE_CELL.x;
+    }
+
+    if (ACTIVE_CELL.y < smallest_cell.y) {
+      smallest_cell.y = ACTIVE_CELL.y;
+    }
+  }
+
+  const SMALLEST_CELL_POS = createVector(50, 50);
+  const POSITIVE_SMALLEST_CELL = createVector(Math.abs(smallest_cell.x), Math.abs(smallest_cell.y));
+
+  const DISTANCE_BETWEEN_SMALLEST_AND_BASE = p5.Vector.mult(POSITIVE_SMALLEST_CELL, CELL_SIZE);
+
+  base_cell_pos = p5.Vector.add(SMALLEST_CELL_POS, DISTANCE_BETWEEN_SMALLEST_AND_BASE);
+}
+
+function drawDescriptions() {
+  function li(TEXT) {
+    return '<li>' + TEXT + '</li>';
+  }
+
+
+  // donde tengo la lista de palabras?
+  // en words_data
+
+  const WORDS_DATA_KEYS = Object.keys(words_data);
+
+
+  let description_texts = '';
+  WORDS_DATA_KEYS.forEach((WORD) => {
+    const TEXT = DESCRIPTIONS[WORD.toLowerCase()];
+    description_texts += li(TEXT+'.');
+  });
+
+
+
+  let ol = createElement('ol', description_texts);
+
+
+
+  //where is it positioned?
+  // el cell que esta más abajo mas un margen.
+
+  let lowest_cell = createVector(0,0);
+  for (const ACTIVE_CELL of active_cells) {
+    if (ACTIVE_CELL.y > lowest_cell.y) {
+      lowest_cell.y = ACTIVE_CELL.y;
+    }
+  }
+
+  const DISTANCE_BETWEEN_LOWEST_AND_BASE = p5.Vector.mult(lowest_cell, CELL_SIZE);
+
+  const DESCRIPTION_POS = p5.Vector.add(base_cell_pos, DISTANCE_BETWEEN_LOWEST_AND_BASE);
+
+  const DESCRIPTION_TOP_MARGIN = 50;
+
+  ol.position(0,DESCRIPTION_POS.y+DESCRIPTION_TOP_MARGIN);
 }
 
 function getPluggableWords(WORD, FIND_LETTER_TRIES, FIND_PLUGGABLE_WORD_TRIES) {
@@ -171,8 +287,8 @@ function getPluggableWords(WORD, FIND_LETTER_TRIES, FIND_PLUGGABLE_WORD_TRIES) {
       
 
       selected_indexes.push(SELECTED_LETTER_INDEX);
-      const OPPOSITE_WORD_ORIENTATION = OPPOSITE_ANGLES.ORIENTATIONS[words_angles[WORD].ORIENTATION];
-      const SELECTED_LETTER_CELL = cells_per_word[WORD][SELECTED_LETTER_INDEX]
+      const OPPOSITE_WORD_ORIENTATION = OPPOSITE_ANGLES.ORIENTATIONS[words_data[WORD].ANGLES.ORIENTATION];
+      const SELECTED_LETTER_CELL = words_data[WORD].CELLS[SELECTED_LETTER_INDEX]
 
       console.log(words_angles[WORD], '[word angles]');
 
@@ -205,7 +321,7 @@ function getPluggableWords(WORD, FIND_LETTER_TRIES, FIND_PLUGGABLE_WORD_TRIES) {
             console.log('********* SUCCESS ' + PLUGGABLE_WORD + '*********');
             words.splice(words.indexOf(PLUGGABLE_WORD), 1);
 
-            pluggable_words[PLUGGABLE_WORD] = {'START_CELL': START_CELL.copy(), 'WORD_ANGLES': PLUGGABLE_WORD_ANGLES, 'CONNECTION_CELL': SELECTED_LETTER_CELL.copy()}
+            pluggable_words[PLUGGABLE_WORD] = {'START_CELL': START_CELL.copy(), 'ANGLES': PLUGGABLE_WORD_ANGLES, 'CONNECTION_CELL': SELECTED_LETTER_CELL.copy()}
             break get_target_word_loop;
           }
         }
@@ -372,9 +488,9 @@ function getPluggableWords(WORD, FIND_LETTER_TRIES, FIND_PLUGGABLE_WORD_TRIES) {
   }
 }
 
-function drawPluggableWords(PLUGGABLE_WORDS) {
+function setPluggableWordsData(PLUGGABLE_WORDS) {
   console.log('');
-  console.log('(drawPluggableWords)');
+  console.log('(setPluggableWordsData)');
   console.log(Object.keys(PLUGGABLE_WORDS));
   
   let limit_words_achived = false
@@ -388,145 +504,146 @@ function drawPluggableWords(PLUGGABLE_WORDS) {
     }
     limit_words_counter++;
 
-    drawWord(PLUGGABLE_WORD, PLUGGABLE_WORD_DATA.START_CELL, PLUGGABLE_WORD_DATA.WORD_ANGLES, PLUGGABLE_WORD_DATA.CONNECTION_CELL);
+    setWordData(PLUGGABLE_WORD, PLUGGABLE_WORD_DATA.START_CELL, PLUGGABLE_WORD_DATA.ANGLES, PLUGGABLE_WORD_DATA.CONNECTION_CELL);
   }
 
   return limit_words_achived;
 }
 
-function drawWordImaginary(WORD, START_CELL, WORD_ANGLES, CONNECTION_CELL) {
-  let word_array = [];
-  for (const LETTER of WORD) word_array.push(LETTER);
-  let word_cells = [];
-  const WORD_INDEXES_FOR_AUTOFILL = getIndexesForAutofill(word_array);
-
+function setWordData(WORD, START_CELL, WORD_ANGLES, CONNECTION_CELL) {
   const CELL_MOVEMENT = CELL_MOVEMENTS[WORD_ANGLES.ORIENTATION][WORD_ANGLES.DIRECTION];
-
   let actual_cell = START_CELL.copy();
+  word_cells = [];
 
-  word_array.forEach((LETTER, LETTER_INDEX) => {
-    const CELL_POS = p5.Vector.add(
-      BASE_CELL_POS, p5.Vector.mult(actual_cell, CELL_SIZE));
-
-    const AUTOFILL = WORD_INDEXES_FOR_AUTOFILL.includes(LETTER_INDEX) ? true : false;
-
-    if (!actual_cell.equals(CONNECTION_CELL)) {
-      drawLetter(LETTER, CELL_POS, AUTOFILL);
-      active_cells.push(actual_cell.copy());}
-    if (LETTER_INDEX == 0) drawBeginningIndicator(CELL_POS, WORD_ANGLES);
-
+  for (const LETTER of WORD) {
     word_cells.push(actual_cell.copy());
+    active_cells.push(actual_cell.copy());
     actual_cell.add(CELL_MOVEMENT);
-  })
+  }
 
-  cells_per_word[WORD] = word_cells;
-  words_angles[WORD] = WORD_ANGLES;
+  words_data[WORD] = {
+    CELLS: word_cells,
+    CONNECTION_CELL: CONNECTION_CELL,
+    ANGLES: WORD_ANGLES,
+    INDEX: limit_words_counter+1,
+  }
+
   words_to_extend.push(WORD);
-  console.log(WORD, '[successfully drawed]');
+  console.log(WORD, '[set word data successfully]');
   console.log('');
 }
 
-function drawWord(WORD, START_CELL, WORD_ANGLES, CONNECTION_CELL) {
-  let word_array = [];
-  for (const LETTER of WORD) word_array.push(LETTER);
-  let word_cells = [];
-  const WORD_INDEXES_FOR_AUTOFILL = getIndexesForAutofill(word_array);
-
-  const CELL_MOVEMENT = CELL_MOVEMENTS[WORD_ANGLES.ORIENTATION][WORD_ANGLES.DIRECTION];
-
-  let actual_cell = START_CELL.copy();
-
-  word_array.forEach((LETTER, LETTER_INDEX) => {
-    const CELL_POS = p5.Vector.add(
-      BASE_CELL_POS, p5.Vector.mult(actual_cell, CELL_SIZE));
-
-    const AUTOFILL = WORD_INDEXES_FOR_AUTOFILL.includes(LETTER_INDEX) ? true : false;
-
-    if (!actual_cell.equals(CONNECTION_CELL)) {
-      drawLetter(LETTER, CELL_POS, AUTOFILL);
-      active_cells.push(actual_cell.copy());}
-    if (LETTER_INDEX == 0) drawBeginningIndicator(CELL_POS, WORD_ANGLES);
-
-    word_cells.push(actual_cell.copy());
-    actual_cell.add(CELL_MOVEMENT);
-  })
-
-  cells_per_word[WORD] = word_cells;
-  words_angles[WORD] = WORD_ANGLES;
-  words_to_extend.push(WORD);
-  console.log(WORD, '[successfully drawed]');
+function drawCrossword() {
   console.log('');
+  console.log('(drawCrossword)');
+  console.log(Object.keys(words_data));
 
-  function drawBeginningIndicator(CELL_POS, WORD_ANGLES) {
-    // este span solo se dibuja en la primera letra
-    let SPAN = createSpan(limit_words_counter+1);
+  const WORDS_DATA_KEYS = Object.keys(words_data);
 
-    // AHORA NO LA POSICIONES ENCIMA, SINO DETRAS
-    // A CONTRA DIRECCIÓN.
-    const BACK_MOVEMENT_AMOUNTS = {
-      [ANGLES.ORIENTATIONS[0]]: {
-        [ANGLES.DIRECTIONS[0]]: createVector(30,4), 
-        [ANGLES.DIRECTIONS[1]]: createVector(-9,4)},
-      [ANGLES.ORIENTATIONS[1]]: {
-        [ANGLES.DIRECTIONS[0]]: createVector(8,25), 
-        [ANGLES.DIRECTIONS[1]]: createVector(8,-16)}
-    }
+  for (const WORD of WORDS_DATA_KEYS) {
+    const WORD_DATA = words_data[WORD]
+    
 
-    const BACK_MOVEMENT = CELL_MOVEMENTS[WORD_ANGLES.ORIENTATION][OPPOSITE_ANGLES.DIRECTIONS[WORD_ANGLES.DIRECTION]];
-    const BACK_AMOUNT = BACK_MOVEMENT_AMOUNTS[WORD_ANGLES.ORIENTATION][OPPOSITE_ANGLES.DIRECTIONS[WORD_ANGLES.DIRECTION]];
-    const BACK_POS = p5.Vector.add(BACK_MOVEMENT, BACK_AMOUNT);
-
-    CELL_POS.add(BACK_POS);
-    SPAN.position(CELL_POS.x,CELL_POS.y);
+    drawWord(WORD, WORD_DATA.CELLS, WORD_DATA.ANGLES, WORD_DATA.CONNECTION_CELL);
   }
 
-  /*
-  Creates, positions and sets the input html.
-  */
-  function drawLetter(LETTER, CELL_POS, AUTOFILL) {
-    const INP = createInput(AUTOFILL ? LETTER : '');
-    INP.position(CELL_POS.x, CELL_POS.y);
-    INP.size(INPUT_SIZE_HTML, INPUT_SIZE_HTML);
-    INP.input(inputManager);
+
+  function drawWord(WORD, CELLS, WORD_ANGLES, CONNECTION_CELL) {
+    let word_array = [];
+    for (const LETTER of WORD) word_array.push(LETTER);
+    const WORD_INDEXES_FOR_AUTOFILL = getIndexesForAutofill(word_array);
+
+    CELLS.forEach((CELL, CELL_INDEX) => {
+      const LETTER = WORD[CELL_INDEX];
+      const AUTOFILL = WORD_INDEXES_FOR_AUTOFILL.includes(CELL_INDEX) ? true : false;
+
+      const CELL_POS = p5.Vector.add(
+        base_cell_pos, p5.Vector.mult(CELL, CELL_SIZE));
 
 
-    /*
-    How does the input manage the entry data.
-    */
-    function inputManager() {
-      let word = this.value();
-      if (word.length == 0) {
-        word = '';
-      } else {
-        this.value(word[word.length-1].toUpperCase());
+      if (!CELL.equals(CONNECTION_CELL)) {
+        drawLetter(LETTER, CELL_POS, AUTOFILL);
       }
-      console.log(word);
-    }
-  }
 
-  function getIndexesForAutofill(WORD_ARRAY) {
-    let word_indexes_for_autofill = []
-    WORD_ARRAY.forEach((LETTER, INDEX) => {
-      word_indexes_for_autofill.push(INDEX);
+      if (CELL_INDEX == 0) {
+        drawBeginningIndicator(WORD, CELL_POS, WORD_ANGLES);
+      }
     })
 
-    console.log(word_indexes_for_autofill, '**************************************************************************************************************************');
+    console.log(WORD, '[successfully drawed]');
+    console.log('');
 
-    const RANDOM_AUTOFILL_PERCENTAGE = random(WORD_AUTOFILL_PERCENTAGE_LIMITS.min, WORD_AUTOFILL_PERCENTAGE_LIMITS.max);
-    const WORD_LETTER_AMOUNT_AUTOFILL_BY_PERCENTAGE = Math.floor((WORD.length-1) * RANDOM_AUTOFILL_PERCENTAGE);
+    function drawBeginningIndicator(WORD, CELL_POS, WORD_ANGLES) {
+      // este span solo se dibuja en la primera letra
+      let SPAN = createSpan(words_data[WORD].INDEX);
 
-    console.log(RANDOM_AUTOFILL_PERCENTAGE, WORD_LETTER_AMOUNT_AUTOFILL_BY_PERCENTAGE, '**************************************************************************************************************************');
+      // AHORA NO LA POSICIONES ENCIMA, SINO DETRAS
+      // A CONTRA DIRECCIÓN.
+      const BACK_MOVEMENT_AMOUNTS = {
+        [ANGLES.ORIENTATIONS[0]]: {
+          [ANGLES.DIRECTIONS[0]]: createVector(30,4), 
+          [ANGLES.DIRECTIONS[1]]: createVector(-9,4)},
+        [ANGLES.ORIENTATIONS[1]]: {
+          [ANGLES.DIRECTIONS[0]]: createVector(8,25), 
+          [ANGLES.DIRECTIONS[1]]: createVector(8,-16)}
+      }
 
+      const BACK_MOVEMENT = CELL_MOVEMENTS[WORD_ANGLES.ORIENTATION][OPPOSITE_ANGLES.DIRECTIONS[WORD_ANGLES.DIRECTION]];
+      const BACK_AMOUNT = BACK_MOVEMENT_AMOUNTS[WORD_ANGLES.ORIENTATION][OPPOSITE_ANGLES.DIRECTIONS[WORD_ANGLES.DIRECTION]];
+      const BACK_POS = p5.Vector.add(BACK_MOVEMENT, BACK_AMOUNT);
 
-    let autofill_counter = 0;
-    while (autofill_counter < (WORD.length-1) - WORD_LETTER_AMOUNT_AUTOFILL_BY_PERCENTAGE) {
-      const RANDOM_INDEX = randomInt(word_indexes_for_autofill.length);
-      word_indexes_for_autofill.splice(RANDOM_INDEX, 1);
-      autofill_counter++;
+      CELL_POS.add(BACK_POS);
+      SPAN.position(CELL_POS.x,CELL_POS.y);
     }
-    console.log(word_indexes_for_autofill, '**************************************************************************************************************************');
 
-    return word_indexes_for_autofill;
+    /*
+    Creates, positions and sets the input html.
+    */
+    function drawLetter(LETTER, CELL_POS, AUTOFILL) {
+      const INP = createInput(AUTOFILL ? LETTER : '');
+      INP.position(CELL_POS.x, CELL_POS.y);
+      INP.size(INPUT_SIZE_HTML, INPUT_SIZE_HTML);
+      INP.input(inputManager);
+
+
+      /*
+      How does the input manage the entry data.
+      */
+      function inputManager() {
+        let word = this.value();
+        if (word.length == 0) {
+          word = '';
+        } else {
+          this.value(word[word.length-1].toUpperCase());
+        }
+        console.log(word);
+      }
+    }
+
+    function getIndexesForAutofill(WORD_ARRAY) {
+      let word_indexes_for_autofill = []
+      WORD_ARRAY.forEach((LETTER, INDEX) => {
+        word_indexes_for_autofill.push(INDEX);
+      })
+
+      console.log(word_indexes_for_autofill, '**************************************************************************************************************************');
+
+      const RANDOM_AUTOFILL_PERCENTAGE = random(WORD_AUTOFILL_PERCENTAGE_LIMITS.min, WORD_AUTOFILL_PERCENTAGE_LIMITS.max);
+      const WORD_LETTER_AMOUNT_AUTOFILL_BY_PERCENTAGE = Math.floor((WORD.length-1) * RANDOM_AUTOFILL_PERCENTAGE);
+
+      console.log(RANDOM_AUTOFILL_PERCENTAGE, WORD_LETTER_AMOUNT_AUTOFILL_BY_PERCENTAGE, '**************************************************************************************************************************');
+
+
+      let autofill_counter = 0;
+      while (autofill_counter < (WORD.length-1) - WORD_LETTER_AMOUNT_AUTOFILL_BY_PERCENTAGE) {
+        const RANDOM_INDEX = randomInt(word_indexes_for_autofill.length);
+        word_indexes_for_autofill.splice(RANDOM_INDEX, 1);
+        autofill_counter++;
+      }
+      console.log(word_indexes_for_autofill, '**************************************************************************************************************************');
+
+      return word_indexes_for_autofill;
+    }
   }
 }
 

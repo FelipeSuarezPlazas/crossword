@@ -8,3 +8,10 @@ body {
 .container {
       margin: 30px;
 }
+
+
+span {
+      color: indianred;
+      font-size: 10px;
+      font-weight: bold;
+}
