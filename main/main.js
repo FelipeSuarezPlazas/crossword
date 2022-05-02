@@ -81,7 +81,47 @@ Arreglar algoritmo de palabras,
 Hacer que la palabra pruebe con absolutamente todas
 las palabras que existen en la lista.
 
+
+
+
+
+Esto es bastante curioso, pero yo solo me siento aqui a escribir
+
+mi unica herramienta de comunicación con esta computadora
+compleja, es un teclado con palabras y numeros.
+
+
+
+palabras, y numeros, o sea palabras y matematicas
+o sea palabras y palabras precisas, exactas.
+
+palabras, hablar
+esto es directamente como hablar
+es como si le contara a ella o le describiera con palabras
+que es lo que quiero que muestra. No.
+
+
+Es casi como si me sentara a contarle lo que veo en mi mente.
+
+una variable es un significado exacto.
+es algo que no se puede malinterpretar, significa una cosa y punto
+pero es una cosa que significa lo mismo para todos los seres
+humanos del planeta, asi de exacto es. Matematicas
+ 
+ Una forma de expresion para la coordinación humana precisa.
+ eso es una variable. pero accedo a ella, o mejor dicho me refiero
+ a ella con una palabra, bueno, es mi imaginación.
+
+ expresarlo de forma exacta, matematicas.
+ Es una forma de imaginación precisa. Viene de la sagacidad
+ previa acumulada.
+
+ Contarle lo que imagino, o lo que veo, contarselo.
+
+
+
 */
+
 
 
 
@@ -125,6 +165,19 @@ function createCrossword() {
     if (limit_words_drawed_counter == LIMIT_WORDS_DRAWED-1) break;
     extendWord(WORD);
   }
+
+
+  /*
+  This function connects a random word to the given word.
+
+  */
+  /*
+  let word = 'building';
+  let plugged_word = tryGetPuggableRandomWord(word);
+  let cells = drawWordNew(plugged_word);
+  registerWord(plugged_word);
+
+  */
 }
 
 
