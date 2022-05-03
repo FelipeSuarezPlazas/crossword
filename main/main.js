@@ -192,9 +192,9 @@ function crossword() {
   }
 
   setBaseCellPos();
+  fillWordsInputValues();
   drawCrossword();
   drawDescriptions();
-  fillWordsInputValues();
 }
 
 function fillWordsInputValues() {
@@ -581,8 +581,13 @@ function drawCrossword() {
       if (!CELL.equals(CONNECTION_CELL)) {
         input = drawLetter(LETTER, CELL_POS, AUTOFILL);
         input.id(ID_OR_CLASS);
+        if (AUTOFILL) {
+          words_input_values[WORD][CELL_INDEX] = LETTER;
+          document.getElementById(ID_OR_CLASS).disabled = true;
+        }
         cell_inputs[CELL_ID] = input;
       } else {
+        words_input_values[WORD][CELL_INDEX] = LETTER;
         input = cell_inputs[CELL_ID];
         input.class(ID_OR_CLASS);
       }
@@ -773,12 +778,6 @@ function drawBorder() {
 function randomInt(num) {
   return Math.floor(random(num));
 }
-
-
-
-let str = 'Felipe';
-str = str.replace('F', 'w');
-console.log(str, '------------------');
 
 
 
