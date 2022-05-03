@@ -8,3 +8,10 @@ body {
 .container {
       margin: 30px;
 }
+
+
+span {
+      color: blue;
+      font-size: 12px;
+      font-weight: bold;
+}
