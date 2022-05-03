@@ -126,21 +126,21 @@ let words_to_extend = [];
 const WORD_AUTOFILL_PERCENTAGE_LIMITS = {min: .3, max: .5};
 
 
+let cell_inputs = {};
+
+
 let words_data = {};
+let next_input_id = '';
+
+
+let words_input_values = {};
 
 
 /* TAREAS POR HACER.
-input manager***
-cada vez que se cambia, este de comprobar si su grupo de inputs
-completan la palabra correcta, si es asi llamar a markWord function
 
-markWord***
-esta funcion hace algo que haga que la persona identifique
-que la palabra ha sido comletada correctamente.
-
-descripciones****
-dejabo del crucigrama, debe haber una lista de parrafos que
-describen las palabras que van en cada una de las lineas de inputs
+***** ALERTA POSIBLE BUG
+si una palabra tiene más de 10 digitos
+el input manager podria fallar.
 
 */
 
@@ -194,6 +194,19 @@ function crossword() {
   setBaseCellPos();
   drawCrossword();
   drawDescriptions();
+  fillWordsInputValues();
+}
+
+function fillWordsInputValues() {
+  const WORDS_DATA_KEYS = Object.keys(words_data);
+  let word_letters_array = [];
+  for (const WORD of WORDS_DATA_KEYS) {
+    for (const LETTER of WORD) {
+      word_letters_array.push('.');
+    }
+    words_input_values[WORD] = word_letters_array;
+    word_letters_array = [];
+  }
 }
 
 function setBaseCellPos() {
@@ -561,8 +574,17 @@ function drawCrossword() {
         base_cell_pos, p5.Vector.mult(CELL, CELL_SIZE));
 
 
+      let input;
+      const ID_OR_CLASS = WORD + CELL_INDEX
+      const CELL_ID = CELL.x+''+CELL.y;
+
       if (!CELL.equals(CONNECTION_CELL)) {
-        drawLetter(LETTER, CELL_POS, AUTOFILL);
+        input = drawLetter(LETTER, CELL_POS, AUTOFILL);
+        input.id(ID_OR_CLASS);
+        cell_inputs[CELL_ID] = input;
+      } else {
+        input = cell_inputs[CELL_ID];
+        input.class(ID_OR_CLASS);
       }
 
       if (CELL_INDEX == 0) {
@@ -605,18 +627,110 @@ function drawCrossword() {
       INP.size(INPUT_SIZE_HTML, INPUT_SIZE_HTML);
       INP.input(inputManager);
 
+      return INP;
+
 
       /*
       How does the input manage the entry data.
       */
       function inputManager() {
+        /*
+        This input can only have one uppercase letter.
+        */
         let word = this.value();
         if (word.length == 0) {
           word = '';
         } else {
           this.value(word[word.length-1].toUpperCase());
         }
+        // perfecto, este valor debo cambiarlo tambien en 
+        // la lista, tengo el index y la palabra asi que no hay problema.
         console.log(word);
+
+        //document.getElementById(this.id()).disabled = true;
+
+
+        /*
+        Based on the id, or class, focus the next word input and focus it.
+        */
+        let input_id;
+
+        if (this.class() == next_input_id && next_input_id != '') {
+          input_id = next_input_id;
+        } else {
+          input_id = this.id();
+        }
+        // ahora lo que quiero hacer, es que haga un loop
+        // hasta que encuentra una proxima letra
+        //a la cual hacerle focus. quiero que siga
+        // y siga aumentando el numero hasta que cuadre.
+
+        const LAST_NUM = input_id[input_id.length-1];
+        for (let plus = 1; plus < input_id.length-2; plus++) {
+          console.log(plus, 'plus');
+          const NEXT_NUM = parseInt(LAST_NUM) + plus;
+          next_input_id = input_id.replace(LAST_NUM, NEXT_NUM);
+          console.log(next_input_id, 'next_input_id');
+
+          let input = document.getElementById(next_input_id);
+          if (input != null && !input.disabled) {
+            input.focus();
+            console.log('id');
+            break;
+          } else {
+            input = document.getElementsByClassName(next_input_id)[0];
+            if (input != null && !input.disabled) {
+              input.focus();
+              console.log('class');
+              break;
+            }
+          }
+        }
+
+
+
+        { // DISABLE INPUTS IF THE VALUES ARE CORRECT.
+
+          // si este input tiene un id y una clase
+          // ambos hay que ponerlos
+          const IDENTIFIERS = [this.id(), this.class()]
+          IDENTIFIERS.forEach((IDENTIFIER, IDENTIFIER_INDEX) => {
+            if (IDENTIFIER != '' && IDENTIFIER != null) {
+              console.log(IDENTIFIER, 'IDENTIFIER');
+              let word = IDENTIFIER.slice(0, -1);
+              let word_index = IDENTIFIER[IDENTIFIER.length-1];
+              //console.log(word, word_index, '---------*-*-*-*-*----');
+              words_input_values[word][word_index] = this.value();
+
+
+              let united_word = '';
+              for (const LETTER of words_input_values[word]) {
+                united_word += LETTER;
+              }
+
+              console.log(word);
+              console.log(united_word);
+              console.log(united_word == word);
+              if (united_word == word) {
+                // disable all the inputs.
+                let index = 0;
+                for (const LETTER of word) {
+                  // esto depende de si la letra tiene id y tambien classe.
+                  let input = document.getElementById(word+index);
+                  if (input != null) {
+                    input.disabled = true;
+                  } else {
+                    input = document.getElementsByClassName(word+index)[0];
+                    if (input != null) {
+                      input.disabled = true;
+                    }
+                  }
+                  index++;
+                }
+              }
+            }
+          })
+        }
       }
     }
 
@@ -661,6 +775,10 @@ function randomInt(num) {
 }
 
 
+
+let str = 'Felipe';
+str = str.replace('F', 'w');
+console.log(str, '------------------');
 
 
 
