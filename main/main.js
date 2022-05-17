@@ -6,7 +6,7 @@ new p5();
 
 // -------------------------------------------------------------- VARS.
 
-const CANVAS_SIZE = createVector(500, 800);
+const CANVAS_SIZE = createVector(1000, 1000);
 
 
 const DESCRIPTIONS = {
@@ -123,7 +123,7 @@ let cells_per_word = {};
 let words_angles = [];
 let words_to_extend = [];
 
-const WORD_AUTOFILL_PERCENTAGE_LIMITS = {min: .3, max: .5};
+const WORD_AUTOFILL_PERCENTAGE_LIMITS = {min: .2, max: .4};
 
 
 let cell_inputs = {};
@@ -142,11 +142,16 @@ let words_input_values = {};
 si una palabra tiene más de 10 digitos
 el input manager podria fallar.
 
+Porbabilidad de 0 no funciona.
+
+
+QUIERO RODEAR EL CRUCIGRAMA CON UN BORDE MORADO.
+
 */
 
 //let mouse = createVector(0, 0);
 
-const LIMIT_WORDS = 8;
+const LIMIT_WORDS = 5;
 let limit_words_counter = 0;
 
 
@@ -197,6 +202,36 @@ function crossword() {
   drawDescriptions();
 }
 
+function draw() {
+  if (active_cells.length <= 0) return;
+
+  let lowest_cell = createVector(0,0);
+  for (const ACTIVE_CELL of active_cells) {
+    if (ACTIVE_CELL.x > lowest_cell.x) {
+      lowest_cell.x = ACTIVE_CELL.x;
+    }
+  }
+
+  for (const ACTIVE_CELL of active_cells) {
+    if (ACTIVE_CELL.y > lowest_cell.y) {
+      lowest_cell.y = ACTIVE_CELL.y;
+    }
+  }
+
+  const DISTANCE_BETWEEN_LOWEST_AND_BASE = p5.Vector.mult(lowest_cell, CELL_SIZE);
+
+  const DESCRIPTION_POS = p5.Vector.add(base_cell_pos, DISTANCE_BETWEEN_LOWEST_AND_BASE);
+
+  const DESCRIPTION_TOP_MARGIN = 80;
+
+  stroke('#bf94e4');
+  stroke('#eed202'); // yellow
+  stroke('#734f96'); // purple
+  strokeWeight(1);
+  fill('white');
+  rect(5,5,DESCRIPTION_POS.x+50,DESCRIPTION_POS.y+50,25);
+}
+
 function fillWordsInputValues() {
   const WORDS_DATA_KEYS = Object.keys(words_data);
   let word_letters_array = [];
@@ -221,7 +256,7 @@ function setBaseCellPos() {
     }
   }
 
-  const SMALLEST_CELL_POS = createVector(50, 50);
+  const SMALLEST_CELL_POS = createVector(80, 80);
   const POSITIVE_SMALLEST_CELL = createVector(Math.abs(smallest_cell.x), Math.abs(smallest_cell.y));
 
   const DISTANCE_BETWEEN_SMALLEST_AND_BASE = p5.Vector.mult(POSITIVE_SMALLEST_CELL, CELL_SIZE);
@@ -258,8 +293,8 @@ function drawDescriptions() {
 
   let lowest_cell = createVector(0,0);
   for (const ACTIVE_CELL of active_cells) {
-    if (ACTIVE_CELL.y > lowest_cell.y) {
-      lowest_cell.y = ACTIVE_CELL.y;
+    if (ACTIVE_CELL.x > lowest_cell.x) {
+      lowest_cell.x = ACTIVE_CELL.x;
     }
   }
 
@@ -267,9 +302,9 @@ function drawDescriptions() {
 
   const DESCRIPTION_POS = p5.Vector.add(base_cell_pos, DISTANCE_BETWEEN_LOWEST_AND_BASE);
 
-  const DESCRIPTION_TOP_MARGIN = 50;
+  const DESCRIPTION_TOP_MARGIN = 80;
 
-  ol.position(0,DESCRIPTION_POS.y+DESCRIPTION_TOP_MARGIN);
+  ol.position(DESCRIPTION_POS.x+DESCRIPTION_TOP_MARGIN, 50);
 }
 
 function getPluggableWords(WORD, FIND_LETTER_TRIES, FIND_PLUGGABLE_WORD_TRIES) {
