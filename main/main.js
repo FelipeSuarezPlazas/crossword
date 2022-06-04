@@ -151,7 +151,7 @@ QUIERO RODEAR EL CRUCIGRAMA CON UN BORDE MORADO.
 
 //let mouse = createVector(0, 0);
 
-const LIMIT_WORDS = 5;
+const LIMIT_WORDS = 12;
 let limit_words_counter = 0;
 
 
