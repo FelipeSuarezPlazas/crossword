@@ -1,0 +1,351 @@
+__tryGettingRandomValidLetter: function(WORD, SELECTED_INDEXES) {
+    let success = true;
+    const RANDOM_INDEX = random(WORD.length);
+    const SELECTED_LETTER = WORD[RANDOM_INDEX];
+    
+    if (SELECTED_INDEXES.includes(RANDOM_INDEX)) success = false;
+    for (const INDEX of SELECTED_INDEXES) {
+      // If the letters are too close the letter is nos valid.
+      if (Math.abs(RANDOM_INDEX - INDEX) == 1) {
+        success = false
+        break;
+      }
+    }
+    
+    console.log(SELECTED_INDEXES.length, '[selected indexes length]');
+    console.log(RANDOM_INDEX, '[random index]');
+    console.log(SELECTED_LETTER, '[selected letter]');
+
+    return [success, SELECTED_LETTER, RANDOM_INDEX];
+  },
+  __tryGettingRandomValidPluggableWord: function(SELECTED_LETTER) {
+
+    let success = true;
+    const PLUGGABLE_WORD = random(this.copy_words);
+    let letter_indexes;
+
+    if (PLUGGABLE_WORD.includes(SELECTED_LETTER)) {
+      letter_indexes = getLetterIndexes(PLUGGABLE_WORD, SELECTED_LETTER);
+      console.log(letter_indexes.length, '[common letters]')
+    } else {
+      success = false;
+    }
+
+
+    console.log(PLUGGABLE_WORD, '[plugabble word]');
+
+    return [success, PLUGGABLE_WORD, letter_indexes];
+
+    function getLetterIndexes(WORD, LETTER) {
+      /*
+      Takes a word and a letter, and returns a list of indexes
+      where the letter is in the word. 
+      */
+      let indexes = [];
+      let word_array = [];
+
+      for (const L of WORD) word_array.push(L);
+
+      indexes = word_array
+        .map((L, INDEX) => {if (L == LETTER) return INDEX})
+        .filter(INDEX => INDEX != undefined);
+
+      return indexes;
+    }
+  },
+  __checkFittingPluggableWord: function(PLUGGABLE_WORD, OPPOSITE_ORIENTATION, ACTUAL_DIRECTION, CONNECTION_CELL, LETTER_INDEX) {
+    let success = true
+
+    const INVERSE_CELL_MOVEMENT = CELL_MOVEMENTS[OPPOSITE_ORIENTATION][ACTUAL_DIRECTION];
+    const START_CELL = p5.Vector.add(CONNECTION_CELL, p5.Vector.mult(INVERSE_CELL_MOVEMENT, LETTER_INDEX))
+    
+    const PLUGGABLE_WORD_ANGLES = {'ORIENTATION': OPPOSITE_ORIENTATION, 'DIRECTION': OPPOSITE_ANGLES.DIRECTIONS[ACTUAL_DIRECTION]}
+    const CELL_MOVEMENT = CELL_MOVEMENTS[PLUGGABLE_WORD_ANGLES.ORIENTATION][PLUGGABLE_WORD_ANGLES.DIRECTION];
+
+    console.log(OPPOSITE_ORIENTATION, '[opposite word orientation]');
+    console.log(ACTUAL_DIRECTION, '[random direction]');
+
+    console.log(CELL_MOVEMENT, '[random word cell movement]');
+    console.log(LETTER_INDEX, '[repeated letter index]');
+
+
+
+    let actual_cell = START_CELL.copy();
+    console.log(PLUGGABLE_WORD_ANGLES, 'PLUGGABLE_WORD_ANGLES');
+    let PLUGGABLE_OPPOSITE_ORIENTATION = OPPOSITE_ANGLES.ORIENTATIONS[PLUGGABLE_WORD_ANGLES.ORIENTATION];
+    console.log(PLUGGABLE_WORD_ANGLES.ORIENTATION, PLUGGABLE_OPPOSITE_ORIENTATION, 'PLUGGABLE_OPPOSITE_ORIENTATION****')
+    let word_letter_counter = 0;
+
+    /*
+    Check each one of the letter cells where this word is going to be.
+    */
+    random_word_letter_loop:
+    for (const LETTER of PLUGGABLE_WORD) {
+
+
+      /*
+      Iterate over all the active cells (not available cells)
+      to compare in an appropiate way.
+      */
+      for (const ACTIVE_CELL of active_cells) {
+
+        /*
+        If the actual cell is the common cell (connection cell)
+        then no comparison is neccessary, we can avoid it.
+        */
+        if (!actual_cell.equals(CONNECTION_CELL)) {
+
+          /*
+          checks that the cell where this letter 
+          is going to be is available. 
+          */
+          if (actual_cell.equals(ACTIVE_CELL)) {
+            success = false;
+            break random_word_letter_loop;
+          }
+
+
+          /*
+          checks that the cells around the actual cell are availables
+            *(in the oposite orientation).
+          */
+          for (const DIRECTION of ANGLES.DIRECTIONS) {
+            let OPPOSITE_ORIENTATION_MOVEMENT = CELL_MOVEMENTS[PLUGGABLE_OPPOSITE_ORIENTATION][DIRECTION];
+
+            const ACTUAL_CELL_AROUND_CHECKER = p5.Vector.add(actual_cell, OPPOSITE_ORIENTATION_MOVEMENT);
+
+            if (ACTUAL_CELL_AROUND_CHECKER.equals(ACTIVE_CELL)) {
+              success = false;
+              break random_word_letter_loop;
+            }
+          }
+        }
+
+
+        /*
+        If this is the first or the last cell,
+        then check to continuos cells, they must be available too.
+        */
+        if (word_letter_counter == 0) {
+          const OPPOSITE_DIRECTION = OPPOSITE_ANGLES.DIRECTIONS[PLUGGABLE_WORD_ANGLES.DIRECTION];
+          const OPPOSITE_MOVEMENT = CELL_MOVEMENTS[PLUGGABLE_WORD_ANGLES.ORIENTATION][OPPOSITE_DIRECTION];
+
+          const CELL_IN_OPPOSITE_DIRECTION = p5.Vector.add(actual_cell, OPPOSITE_MOVEMENT);
+          if (CELL_IN_OPPOSITE_DIRECTION.equals(ACTIVE_CELL)) {
+            success = false;
+            break random_word_letter_loop;
+          }
+
+        } else if (word_letter_counter == PLUGGABLE_WORD.length-1) {
+          const FOLLOWING_CELL = p5.Vector.add(actual_cell, CELL_MOVEMENT);
+          if (FOLLOWING_CELL.equals(ACTIVE_CELL)) {
+            success = false;
+            break random_word_letter_loop;
+          }
+        }
+      }
+
+      actual_cell.add(CELL_MOVEMENT);
+      word_letter_counter++;
+    }
+
+    return [success, START_CELL, PLUGGABLE_WORD_ANGLES, CELL_MOVEMENT];
+  },
+	__getPluggableWords: function(WORD) {
+		let pluggable_words = {};
+		let selected_indexes = [];
+		  
+		/*
+		try random letters of this word and check if we can use them
+		with a crucigrama algorithm, *(not all the letters can be used).
+		*/
+		for (let a=0; a < this.find_letter_tries; a++) {
+	   	//console.log('********** TRY (' + a + '/' + FIND_LETTER_TRIES + ') **********');
+	    const [LETTER_SUCCESS, SELECTED_LETTER, SELECTED_LETTER_INDEX] = 
+	    					this.__tryGettingRandomValidLetter(WORD, selected_indexes);
+
+	    if (!LETTER_SUCCESS) continue;
+
+
+	    /*
+	    Look for a word that can be plugged in with the selected letter
+	    */
+	    get_target_word_loop:
+	    for (let b=0; b < this.find_pluggable_word_tries; b++) {
+      	const [PLUGGABLE_WORD_SUCCESS, PLUGGABLE_WORD, PLUGGABLE_WORD_REPEATED_LETTER_INDEXES] =
+      						this.__tryGettingRandomValidPluggableWord(SELECTED_LETTER)
+
+      	if (!PLUGGABLE_WORD_SUCCESS) continue;
+      
+				selected_indexes.push(SELECTED_LETTER_INDEX);
+
+      	
+      	const WORD_ANGLES = this.words_data[WORD];
+      	const WORD_OPPOSITE_ANGLES = WORD_ANGLES.getOpposite();
+
+      	const SELECTED_LETTER_CELL = words_data[WORD].CELLS[SELECTED_LETTER_INDEX]
+
+      	//console.log(words_angles[WORD], '[word angles]');
+      	console.log(WORD_ANGLES, '[word angles]');
+
+
+      	/*
+      	If found a word, now lets try fitting it in all the possible
+      	ways, if it contains this letter repeated times, then lets
+      	try them too, just in case it overflows other words.
+      	*/
+		    for (const REPEATED_LETTER_INDEX of PLUGGABLE_WORD_REPEATED_LETTER_INDEXES) {
+	        //try fitting the word in both directions.
+	        // la direccion debo hacerla aleatoria.
+	        let random_directions = Angles.DIRECTIONS.slice();
+	        // necesito un random de 0 a uno
+	        const RANDOM_DIRECTION_INDEX = random(random_directions.length);
+	        const poped_direction = random_directions.splice(RANDOM_DIRECTION_INDEX, 1);
+	        random_directions.push(poped_direction);
+
+	        for (const ACTUAL_DIRECTION of random_directions) {
+		        const [FIT_SUCCESS, START_CELL, PLUGGABLE_WORD_ANGLES, CELL_MOVEMENT] = 
+		        					this.__checkFittingPluggableWord(PLUGGABLE_WORD,OPPOSITE_WORD_ORIENTATION,ACTUAL_DIRECTION, SELECTED_LETTER_CELL, REPEATED_LETTER_INDEX);
+
+
+
+		        /*
+		        If the word fits, then lets draw it :)
+		        Lets count here the number of words that can be drawed
+		        and return if we reach that number.
+		        */
+		        if (FIT_SUCCESS) { 
+	            console.log('********* SUCCESS ' + PLUGGABLE_WORD + '*********');
+	            this.copy_words.splice(this.copy_words.indexOf(PLUGGABLE_WORD), 1);
+
+	            pluggable_words[PLUGGABLE_WORD] = {'START_CELL': START_CELL.copy(), 'ANGLES': PLUGGABLE_WORD_ANGLES, 'CONNECTION_CELL': SELECTED_LETTER_CELL.copy()}
+	            break get_target_word_loop;
+            }
+	        }
+		    }
+			}
+		}
+
+		return pluggable_words;
+	},
+	__getPluggableWords: function(WORD) {
+		// *******connectors are 'letters' with two words******;
+
+		let pluggable_words = {};
+		let active_connector_indexes = []; 
+
+		const WORD_ANGLES = this.words_data[WORD];
+    const WORD_OPPOSITE_ANGLES = WORD_ANGLES.getOpposite();
+
+		// ----- s1.
+		let selected_connector_index = '';
+		let selected_connector = '';
+		let selected_connector_cell; // set in s2, but here for readability c:
+
+		// ----- s2.
+		let selected_word = '';
+		// La palabra seleccionada puede tener el connector muchas veces.
+		// ejemplo: si nuestro connector es 'a' y la palabra seleccionada es 'parar',
+		// entonces esta lista contiene los siguientes indexes = [1, 3] c:
+		let selected_word_repeated_connector_indexes = []; 
+
+		// ----- s3.
+
+
+		  
+		// try random letters of this word and check if we can use them
+		// as connectors.
+		function s1() {
+			for (let a=0; a < this.find_letter_tries; a++) {
+		   	
+		   	let success = true;
+
+		    const RANDOM_INDEX = random(WORD.length);
+		    const RANDOM_LETTER = WORD[RANDOM_INDEX];
+
+				/*
+				Si el index aleatoreo ya lo escojio antes en esta misma palabra,
+				pues no se puede volver a poner una palabra ahí. una letra
+				conectora solo puede tener dos palabras maximo.
+				*/
+				if (active_connector_indexes.includes(RANDOM_INDEX)) success = false;
+
+				/*
+				Si el index aleatoreo cae al lado de un index que ya estaba seleccionado
+				tampoco podría ser, porque en el crusigrama las letras conectoras
+				nunca estan pegadas.
+				*/
+		    for (const CONNECTOR_INDEX of active_connector_indexes) {
+		      if (Math.abs(RANDOM_INDEX - CONNECTOR_INDEX) == 1) success = false;  
+		    }
+
+		    /*
+				If success la letra que se ha escojido es valida. ejemplo:
+				'palabra' tiene la 'p' y la 'b' ya ocupadas, y la que acabamos de selccionar es la 'l'.
+		    */
+		    if (success) {
+		    	selected_connector_index = RANDOM_INDEX;
+		    	selected_connector = RANDOM_LETTER;
+
+		    	s2();
+		    }
+			}
+		}
+
+    //Look for a random word that also contains that connector (letter).
+		function s2() {
+	    get_target_word_loop:
+	    for (let b=0; b < this.find_pluggable_word_tries; b++) {
+
+      	let success = true;
+		    const RANDOM_WORD = random(this.copy_words); // palabra aleatorea.
+
+		    if (RANDOM_WORD.includes(selected_connector)) {
+		    	// fill selected_word_repeated_connector_indexes;
+		      let index = 0;
+		      for (const LETTER of RANDOM_WORD) {
+		      	if (LETTER == selected_connector) selected_word_repeated_connector_indexes.push(index);
+		      	index++;
+		      }
+		    } else success = false;
+
+
+		    if (success) {
+	      	active_connector_indexes.push(selected_connector_index);
+					selected_connector_cell = words_data[WORD].CELLS[selected_connector_index]
+
+	      	s3();
+		    }
+			}
+		}
+
+  	//Try fitting the selected_word with all its repeated connectors
+  	// in all possible angles, till asserting.
+		function s3() {
+	    for (const REPEATED_CONNECTOR_INDEX of selected_word_repeated_connector_indexes) {
+
+        for (const ACTUAL_DIRECTION of Angles.randomDirections()) {
+        	const [FIT_SUCCESS, START_CELL, PLUGGABLE_WORD_ANGLES, CELL_MOVEMENT] = 
+        					this.__checkFittingPluggableWord(PLUGGABLE_WORD,OPPOSITE_WORD_ORIENTATION,ACTUAL_DIRECTION, SELECTED_LETTER_CELL, REPEATED_LETTER_INDEX);
+
+
+
+	        /*
+	        If the word fits, then lets draw it :)
+	        Lets count here the number of words that can be drawed
+	        and return if we reach that number.
+	        */
+	        if (FIT_SUCCESS) { 
+	          console.log('********* SUCCESS ' + PLUGGABLE_WORD + '*********');
+	          this.copy_words.splice(this.copy_words.indexOf(PLUGGABLE_WORD), 1);
+
+	          pluggable_words[PLUGGABLE_WORD] = {'START_CELL': START_CELL.copy(), 'ANGLES': PLUGGABLE_WORD_ANGLES, 'CONNECTION_CELL': SELECTED_LETTER_CELL.copy()}
+	          break get_target_word_loop;
+	        }
+	      }
+	    }
+		}
+
+		return pluggable_words;
+	},
+	
