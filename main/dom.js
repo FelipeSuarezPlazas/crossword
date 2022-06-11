@@ -135,10 +135,22 @@ class Input {
 	grid_position,
 	is_done,
 	*/
+	constructor(LETTER, CELL) {
+		this.input = document.createElement('input');
+		this.input.setAttribute('type', 'text');
+		this.letter = LETTER;
+		this.cell = CELL;
+		this.ids = []; // Lista de objetos [{word: 'DESIGN', index: 4}, {word: 'GUN', index: 1}];
+	}
+
+	addId(WORD, INDEX) {
+		this.ids.push({word: WORD, index: INDEX});
+	}
 }
 
 
 let crossword = {
+	container: document.getElementById('input-grid'),
 	descriptions: {
 	  'apartment': 'A set of rooms for someone to live in on one level of a building or house', 
 	  'glass': 'A hard, clear substance that objects such as windows and bottles are made of', 
@@ -217,6 +229,7 @@ let crossword = {
 	words_data: {}, // this is only for construction.
 	words_to_extend: [],
 	
+	inputs: [],
 	inputs_by_id: {},
 	active_cells: [],
 
@@ -301,21 +314,43 @@ let crossword = {
 
 		// LO IMPORTANTE ERA TENER WORDS_DATA CON LAS 5 PALABRAS Y YA ESTAN.
 
-		/*
-	
-		TAREAS PARA MAÑANA.
-
-		1. transformar todos los words cells a inputs en la grid de css y mostrarlo.
-
-		*/
-
-		/*
-		setBaseCellPos();
-		fillWordsInputValues();
-		drawCrossword();
-		drawDescriptions();
-		*/
+		console.log('WORDS DATA', this.words_data);
+		this.__createInputs();
 	},
+	__createInputs: function() {
+		const WORDS_DATA_KEYS = Object.keys(this.words_data);
+		for (const WORD of WORDS_DATA_KEYS) {
+
+			let letter_index = 0;
+			for (const LETTER of WORD) {
+				const CELL = this.words_data[WORD].CELLS[letter_index];
+
+				const INPUT = new Input(LETTER, CELL);
+				const INPUT_ID = WORD + letter_index;
+
+				INPUT.addId(WORD, letter_index);
+
+				this.inputs.push(INPUT);
+				this.inputs_by_id[INPUT_ID] = INPUT;
+
+				letter_index +=1;
+			}
+		}
+
+		console.log('INPUTS', this.inputs);
+	},
+	__offsetCells: function() {
+		let offset_cell = new Vector(0,0);
+		for (const INPUT of this.inputs) {
+			if (INPUT.cell.x < offset_cell.x) offset_cell.x = INPUT.cell.x;
+			if (INPUT.cell.y < offset_cell.y) offset_cell.y = INPUT.cell.y;
+		}
+
+		for (const INPUT of this.inputs) {
+			INPUT.cell.add();
+		}
+	},
+
 	// -------- START
 	__plugWords: function(WORD) {
 		// *******connectors are 'letters' with two words******;
