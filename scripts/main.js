@@ -136,11 +136,13 @@ class Input {
 	is_done,
 	*/
 	constructor(LETTER, CELL) {
-		this.input = document.createElement('input');
-		this.input.setAttribute('type', 'text');
 		this.letter = LETTER;
 		this.cell = CELL;
 		this.ids = []; // Lista de objetos [{word: 'DESIGN', index: 4}, {word: 'GUN', index: 1}];
+		this.input = document.createElement('input');
+		this.input.setAttribute('type', 'text');
+		this.input.value = this.letter;
+		this.input.disabled = true;
 	}
 
 	addId(WORD, INDEX) {
@@ -150,7 +152,7 @@ class Input {
 
 
 let crossword = {
-	container: document.getElementById('input-grid'),
+	container: document.getElementById('crossword'),
 	descriptions: {
 	  'apartment': 'A set of rooms for someone to live in on one level of a building or house', 
 	  'glass': 'A hard, clear substance that objects such as windows and bottles are made of', 
@@ -231,6 +233,7 @@ let crossword = {
 	
 	inputs: [],
 	inputs_by_id: {},
+	inputs_by_cell_id: {},
 	active_cells: [],
 
 	amount: 5,
@@ -238,6 +241,9 @@ let crossword = {
 
 	find_letter_tries: 6,
 	find_pluggable_word_tries: 20,
+
+	grid_dimentions: {columns: 0, rows: 0},
+	grid_cell_size: '30px',
 
 	setup: function() {
 		this.words = Object.keys(this.descriptions).map(WORD => {
@@ -308,47 +314,20 @@ let crossword = {
 		    
 
 		    const PLUGGED_WORDS_DATA = this.__plugWords(WORD);
-		    const LIMIT_WORDS_ACHIVED = this.__savePluggedWordsData(PLUGGED_WORDS_DATA);
-		    if (LIMIT_WORDS_ACHIVED) break;
+		    this.__savePluggedWordsData(PLUGGED_WORDS_DATA);
+		    if (this.counter == this.amount-1) break;
 		}
 
 		// LO IMPORTANTE ERA TENER WORDS_DATA CON LAS 5 PALABRAS Y YA ESTAN.
 
 		console.log('WORDS DATA', this.words_data);
 		this.__createInputs();
-	},
-	__createInputs: function() {
-		const WORDS_DATA_KEYS = Object.keys(this.words_data);
-		for (const WORD of WORDS_DATA_KEYS) {
-
-			let letter_index = 0;
-			for (const LETTER of WORD) {
-				const CELL = this.words_data[WORD].CELLS[letter_index];
-
-				const INPUT = new Input(LETTER, CELL);
-				const INPUT_ID = WORD + letter_index;
-
-				INPUT.addId(WORD, letter_index);
-
-				this.inputs.push(INPUT);
-				this.inputs_by_id[INPUT_ID] = INPUT;
-
-				letter_index +=1;
-			}
-		}
-
+		this.__offsetCells();
 		console.log('INPUTS', this.inputs);
-	},
-	__offsetCells: function() {
-		let offset_cell = new Vector(0,0);
-		for (const INPUT of this.inputs) {
-			if (INPUT.cell.x < offset_cell.x) offset_cell.x = INPUT.cell.x;
-			if (INPUT.cell.y < offset_cell.y) offset_cell.y = INPUT.cell.y;
-		}
-
-		for (const INPUT of this.inputs) {
-			INPUT.cell.add();
-		}
+		this.__createCssGrid();
+		this.__offsetCellsGrid();
+		this.__positionInputs();
+		this.__fillGrid();
 	},
 
 	// -------- START
@@ -357,7 +336,7 @@ let crossword = {
 		console.log('__plugWords FUNCTION');
 		console.log(this.active_cells.slice(), 'ACTIVE CELLSS PLEASE ---')
 
-		let plugged_words_data = {};
+		let plugged_words_data = [];
 		let active_connector_indexes = []; 
 
 		const WORD_ANGLES = this.words_data[WORD].ANGLES;
@@ -390,7 +369,7 @@ let crossword = {
 		  
 		// try random letters of this word and check if we can use them
 		// as connectors.
-		let sequence1 = function() {
+		function sequence1() {
 			console.log('')
 			console.log('')
 			console.log('(secuence1)');
@@ -434,7 +413,7 @@ let crossword = {
 		}
 
     //Look for a random word that also contains that connector (letter).
-		let sequence2 = function() {
+		function sequence2() {
 			console.log('')
 			console.log('')
 			console.log('(secuence2)');
@@ -479,7 +458,7 @@ let crossword = {
 
   	//Try fitting the selected_word with all its repeated connectors
   	// in all possible angles, till asserting.
-		let sequence3 = function() {
+		function sequence3() {
 			console.log('')
 			console.log('')
 			console.log('(secuence3)');
@@ -497,7 +476,7 @@ let crossword = {
 		}
 
 		//Check each one of the letter cells where selected word is going to be.
-		let sequence4 = function() {
+		function sequence4() {
 			console.log('')
 			console.log('')
 			console.log('(secuence4)');
@@ -592,44 +571,124 @@ let crossword = {
 			console.log('(pluggable)');
 			console.log(selected_word, '  SELECTED WORD PLUGGED **************');
 			crossword.copy_words.splice(crossword.copy_words.indexOf(selected_word), 1);
-      plugged_words_data[selected_word] = {'START_CELL': selected_word_start_cell.copy(), 'ANGLES': selected_word_angles, 'CONNECTION_CELL': selected_connector_cell.copy()}
-		}
+
+			const PLUGGABLE_WORD_DATA = {
+				WORD: selected_word,
+				START_CELL: selected_word_start_cell.copy(), 
+				ANGLES: selected_word_angles, 
+				CONNECTION_CELL: selected_connector_cell.copy(),
+			}
+
+      plugged_words_data.push(PLUGGABLE_WORD_DATA);
+    }
 
 		sequence1();
 
-		console.log(Object.keys(plugged_words_data), 'LOOOOKKKK AT THISSSSSSS ************')
+		//console.log(Object.keys(plugged_words_data), 'LOOOOKKKK AT THISSSSSSS ************')
 		return plugged_words_data;
 	},
   // -------- END
   __savePluggedWordsData: function(PLUGGABLE_WORDS) {
-  	//console.log('');
-	  //console.log('(setPluggableWordsData)');
-	  //console.log(Object.keys(PLUGGABLE_WORDS));
-	  
-	  let limit_words_achived = false
-
-	  const PLUGGABLE_WORDS_KEYS = Object.keys(PLUGGABLE_WORDS);
-	  for (const PLUGGABLE_WORD of PLUGGABLE_WORDS_KEYS) {
-	    const PLUGGABLE_WORD_DATA = PLUGGABLE_WORDS[PLUGGABLE_WORD]
-	    if (this.counter == this.amount-1) {
-	      limit_words_achived = true;
-	      return limit_words_achived;
-	    }
+  	for (const PLUGGED_WORD of PLUGGABLE_WORDS) {
+	    if (this.counter == this.amount-1) return;
 
 	    this.counter += 1;
 
-	    const WORD = PLUGGABLE_WORD;
-			const START_CELL = PLUGGABLE_WORD_DATA.START_CELL;
-			const CONNECTION_CELL = PLUGGABLE_WORD_DATA.CONNECTION_CELL
-			const WORD_ANGLES = PLUGGABLE_WORD_DATA.ANGLES
-			const WORD_CELLS = this.__wordToCells(WORD, START_CELL, WORD_ANGLES);
-
-			this.__saveWordData(WORD, WORD_CELLS, WORD_ANGLES, CONNECTION_CELL);
-			this.words_to_extend.push(WORD);
+	    const WORD_CELLS = this.__wordToCells(PLUGGED_WORD.WORD, PLUGGED_WORD.START_CELL, PLUGGED_WORD.ANGLES);
+			this.__saveWordData(PLUGGED_WORD.WORD, WORD_CELLS, PLUGGED_WORD.ANGLES, PLUGGED_WORD.CONNECTION_CELL);
+			this.words_to_extend.push(PLUGGED_WORD.WORD);
 	  }
-
-	  return limit_words_achived;
   },
+
+  __createInputs: function() {
+		const WORDS_DATA_KEYS = Object.keys(this.words_data);
+		for (const WORD of WORDS_DATA_KEYS) {
+
+			let index = 0;
+			for (const LETTER of WORD) {
+				const CELL = this.words_data[WORD].CELLS[index];
+				const CELL_ID = CELL.x + '_' + CELL.y;
+				const INPUT_ID = WORD + index;
+
+				if (!this.inputs_by_cell_id[CELL_ID]) {
+					const INPUT = new Input(LETTER, CELL);
+
+					INPUT.addId(WORD, index);
+
+					this.inputs.push(INPUT);
+					this.inputs_by_id[INPUT_ID] = INPUT;
+					this.inputs_by_cell_id[CELL_ID] = INPUT;
+
+				} else { // this is a connector cell, so DON'T create another.
+				 const INPUT_CONNECTOR = this.inputs_by_cell_id[CELL_ID];
+				 INPUT_CONNECTOR.addId(WORD, index);
+				 this.inputs_by_id[INPUT_ID] = INPUT_CONNECTOR; // referencing the existent, but with its other id.
+				}
+
+				index++;
+			}
+		}
+	},
+	__offsetCells: function() {
+		let offset_cell = new Vector(0,0);
+		for (const INPUT of this.inputs) {
+			if (INPUT.cell.x < offset_cell.x) offset_cell.x = INPUT.cell.x;
+			if (INPUT.cell.y < offset_cell.y) offset_cell.y = INPUT.cell.y;
+		}
+
+		offset_cell.x = Math.abs(offset_cell.x);
+		offset_cell.y = Math.abs(offset_cell.y);
+
+		for (const INPUT of this.inputs) {
+			INPUT.cell.add(offset_cell);
+		}
+	},
+	__createCssGrid: function() {
+		// cuantas columnas tiene?
+		// cuantas filas tiene?
+
+		this.grid_dimentions = {columns: 0, rows: 0};
+		for (const INPUT of this.inputs) {
+			if (INPUT.cell.x > this.grid_dimentions.columns) this.grid_dimentions.columns = INPUT.cell.x;
+			if (INPUT.cell.y > this.grid_dimentions.rows) this.grid_dimentions.rows = INPUT.cell.y;
+		}
+
+		this.grid_dimentions.columns = this.grid_dimentions.columns+3;
+		this.grid_dimentions.rows = this.grid_dimentions.rows+3;
+
+		console.log('GRID DIMENTIONS', this.grid_dimentions);
+
+		this.container.style.gridTemplateColumns = 'repeat(' + this.grid_dimentions.columns + ', ' + this.grid_cell_size + ')';
+		this.container.style.gridTemplateRows = 'repeat(' + this.grid_dimentions.rows + ', ' + this.grid_cell_size + ')';
+
+		for (const INPUT of this.inputs) {
+			this.container.appendChild(INPUT.input);
+		}
+	},
+	__offsetCellsGrid: function() {
+		let offset_cell = new Vector(1,1);
+		for (const INPUT of this.inputs) {
+			INPUT.cell.add(offset_cell);
+		}
+	},
+	__positionInputs: function() {
+		for (const INPUT of this.inputs) {
+			INPUT.input.style.gridColumn = (INPUT.cell.x+1) + ' / ' + (INPUT.cell.x+2);
+			INPUT.input.style.gridRow = (INPUT.cell.y+1) + ' / ' + (INPUT.cell.y+2);
+		}
+	},
+	__fillGrid: function() {
+		// llenar todos los grids.
+		const DIVS_AMOUNT = (this.grid_dimentions.columns * this.grid_dimentions.rows) - this.inputs.length;
+		for (let num = 0; num < DIVS_AMOUNT; num++) {
+			const DIV = document.createElement('div');
+			this.container.appendChild(DIV);
+			//DIV.style.width = '100%';
+			//DIV.style.height = '100%';
+			DIV.style.background = '#333';
+		}
+	}
+
 }
 
 let control = {
