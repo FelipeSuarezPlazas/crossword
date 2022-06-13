@@ -163,18 +163,104 @@ class Marker {
 }
 
 class Input {
+	static last_id = undefined;
+
 	constructor(LETTER, CELL) {
 		this.letter = LETTER;
 		this.cell = CELL;
 		this.ids = []; // Lista de objetos [{word: 'DESIGN', index: 4}, {word: 'GUN', index: 1}];
 		this.container = document.createElement('div');
+		this.container.setAttribute('class', 'input_container');
 		this.container.style.position = 'relative';
 
 		this.input = document.createElement('input');
-		this.input.setAttribute('type', 'text');
-		this.input.value = this.letter;
-		this.input.disabled = true;
 		this.container.appendChild(this.input);
+		this.input.setAttribute('type', 'text');
+		this.input.onclick = () => {
+			Input.last_id = undefined;
+		}
+		this.input.oninput = () => {
+			if (this.input.value.length < 1) {
+				this.input.value = '';
+			} else if (this.input.value.length > 0) {
+				this.input.value = this.input.value[this.input.value.length-1].toUpperCase();
+			}
+
+			// verificar si todos los inputs ya tienen sus valores correspondientes.
+			main:
+			for (const ID_DATA of this.ids) {
+				let index = 0;
+				for (const LETTER of ID_DATA.word) {
+					const VALUE = crossword.inputs_by_id[ID_DATA.word + index].input.value;
+					const LETTER = crossword.inputs_by_id[ID_DATA.word + index].letter;
+					console.log(ID_DATA.word, VALUE, LETTER);
+					console.log(VALUE == LETTER);
+					if (VALUE != LETTER) {
+						break main;
+					}
+					index++;
+				}
+				// si logra pasar aca, quiere decir que ya todas estan completas.
+				index = 0;
+				for (const LETTER of ID_DATA.word) {
+					console.log('NO DEBERIA ENTRAR AQUI');
+					const INPUT = crossword.inputs_by_id[ID_DATA.word + index];
+					INPUT.input.disabled = true;
+					index++;
+				}
+			}
+
+
+
+			console.log('ON INPUT', this.ids);
+			if (this.input.value.length > 0) {
+				this.input.value = this.input.value[this.input.value.length-1].toUpperCase();
+				if (this.ids.length == 1) {
+					for (let i = 1; i < 3; i++) {
+						const NEXT_INPUT = crossword.inputs_by_id[this.ids[0].word + (this.ids[0].index+i)];
+						if (NEXT_INPUT && !NEXT_INPUT.input.disabled) {
+							Input.last_id = {word: this.ids[0].word, index: this.ids[0].index};
+							NEXT_INPUT.input.focus();
+							break;
+						}
+						this.input.blur();
+					}
+				} else { // it is a connector :v
+					// debo dar prioridad al anterior.
+					if (Input.last_id) {
+						let next_input = crossword.inputs_by_id[Input.last_id.word + (Input.last_id.index+2)];
+						if (next_input) {
+							Input.last_id.index += 1;
+							next_input.input.focus();
+						} else { // this is the last one, so lets try with the other id. THIS IS A CONNECTOR.
+							for (const ID_DATA of this.ids) {
+								if (Input.last_id.word != ID_DATA.word) {
+									next_input = crossword.inputs_by_id[ID_DATA.word + (ID_DATA.index+1)];
+									if (next_input) {
+										Input.last_id = {word: ID_DATA.word, index: ID_DATA.index};
+										next_input.input.focus();
+									} else { // this connector is the last letter of both two words.
+										this.input.blur();
+										Input.last_id = undefined;
+									}
+									break;
+								}
+							}
+						}
+					} else {
+						for (const ID_DATA of this.ids) {
+							let next_input = crossword.inputs_by_id[ID_DATA.word + (ID_DATA.index+1)];
+							if (next_input) {
+								Input.last_id = ID_DATA;
+								next_input.input.focus();
+								return;
+							}
+						}
+						this.input.blur();
+					}
+				}
+			}
+		};
 	}
 
 	addId(WORD, INDEX) {

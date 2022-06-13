@@ -8,12 +8,21 @@ input[type="text"] {
       border-width: 0px;
       width: 100%;
       height: 100%;
+      border-radius: 4px;
+}
+
+input[type="text"]:focus {
+      border-width: 0px;
+      outline-width: 0px;
+      border-radius: 3px;
 }
 
 input:disabled {
       /*background-color: rgba(186,85,211,0.7);*/
-      background-color: #f9f9f9;
-      border-color: black;
-      border-width: 0px;
+      background: yellow;
+}
+
+.input-container {
+      overflow: hidden;
       border-radius: 3px;
 }
