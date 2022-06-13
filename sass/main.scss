@@ -1,0 +1,31 @@
+
+
+
+@import 'abstracts/vars';
+
+*,
+*::before,
+*::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+}
+
+
+body {
+      font-family: cursive;
+      display: grid;
+      justify-content: center;
+      align-content: flex-start;
+      background: #fff;
+}
+
+@import 'components/game';
+@import 'components/crossword';
+@import 'components/descriptions';
+@import 'components/description_card';
+@import 'components/marker';
+@import 'components/inputs';
+@import 'components/empty_divs';
+
+

@@ -1,0 +1,12 @@
+{
+	"version": 3,
+	"file": "empty_divs.css",
+	"sources": [
+		"../../sass/components/empty_divs.scss"
+	],
+	"sourcesContent": [
+		"\r\n\r\n\r\n.empty-div {\r\n      background: #322838;\r\n      border-radius: 3px;\r\n      display: flex;\r\n      justify-content: center;\r\n      align-items: center;\r\n}"
+	],
+	"names": [],
+	"mappings": ";AAGA,AAAA,UAAU,CAAC;EACL,UAAU,EAAE,OAAO;EACnB,aAAa,EAAE,GAAG;EAClB,OAAO,EAAE,IAAI;EACb,eAAe,EAAE,MAAM;EACvB,WAAW,EAAE,MAAM,GACxB"
+}

@@ -1,0 +1,12 @@
+{
+	"version": 3,
+	"file": "marker.css",
+	"sources": [
+		"../../sass/components/marker.scss"
+	],
+	"sourcesContent": [
+		"\r\n\r\n\r\n.markers {\r\n      color: yellow;\r\n      font-size: 12px;\r\n}"
+	],
+	"names": [],
+	"mappings": ";AAGA,AAAA,QAAQ,CAAC;EACH,KAAK,EAAE,MAAM;EACb,SAAS,EAAE,IAAI,GACpB"
+}

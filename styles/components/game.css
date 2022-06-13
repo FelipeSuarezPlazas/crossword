@@ -1,0 +1,10 @@
+/* line 4, ../Users/felip/OneDrive/Documents/GitHub/international-data/crossword/sass/components/game.scss */
+#game {
+  display: flex;
+  flex-wrap: wrap;
+  /*background: red;*/
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: 32px; }
+
+/*# sourceMappingURL=game.css.map */

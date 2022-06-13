@@ -1,0 +1,12 @@
+{
+	"version": 3,
+	"file": "crossword.css",
+	"sources": [
+		"../../sass/components/crossword.scss"
+	],
+	"sourcesContent": [
+		"\r\n\r\n\r\n#crossword {\r\n      display: grid;\r\n      grid-gap: 2px;\r\n      background: #241330;\r\n      padding: 0;\r\n      overflow: hidden;\r\n      border: 2px solid #241330;\r\n      border-radius: 6px;\r\n      margin-right: 32px;\r\n      margin-bottom: 16px;\r\n}"
+	],
+	"names": [],
+	"mappings": ";AAGA,AAAA,UAAU,CAAC;EACL,OAAO,EAAE,IAAI;EACb,QAAQ,EAAE,GAAG;EACb,UAAU,EAAE,OAAO;EACnB,OAAO,EAAE,CAAC;EACV,QAAQ,EAAE,MAAM;EAChB,MAAM,EAAE,iBAAiB;EACzB,aAAa,EAAE,GAAG;EAClB,YAAY,EAAE,IAAI;EAClB,aAAa,EAAE,IAAI,GACxB"
+}

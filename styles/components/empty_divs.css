@@ -1,0 +1,9 @@
+/* line 4, ../Users/felip/OneDrive/Documents/GitHub/international-data/crossword/sass/components/empty_divs.scss */
+.empty-div {
+  background: #322838;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center; }
+
+/*# sourceMappingURL=empty_divs.css.map */

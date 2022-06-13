@@ -1,0 +1,13 @@
+/* line 4, ../Users/felip/OneDrive/Documents/GitHub/international-data/crossword/sass/components/crossword.scss */
+#crossword {
+  display: grid;
+  grid-gap: 2px;
+  background: #241330;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid #241330;
+  border-radius: 6px;
+  margin-right: 32px;
+  margin-bottom: 16px; }
+
+/*# sourceMappingURL=crossword.css.map */

@@ -1,0 +1,12 @@
+{
+	"version": 3,
+	"file": "description_card.css",
+	"sources": [
+		"../../sass/components/description_card.scss"
+	],
+	"sourcesContent": [
+		"\r\n\r\n\r\n.description-cards {\r\n      background: #f6f8fa;\r\n      padding: 16px;\r\n      border-radius: 10px;\r\n      width: auto;\r\n      height: min-content;\r\n      border: 1px solid #d0d7de;\r\n      color: #24292f;\r\n}"
+	],
+	"names": [],
+	"mappings": ";AAGA,AAAA,kBAAkB,CAAC;EACb,UAAU,EAAE,OAAO;EACnB,OAAO,EAAE,IAAI;EACb,aAAa,EAAE,IAAI;EACnB,KAAK,EAAE,IAAI;EACX,MAAM,EAAE,WAAW;EACnB,MAAM,EAAE,iBAAiB;EACzB,KAAK,EAAE,OAAO,GACnB"
+}

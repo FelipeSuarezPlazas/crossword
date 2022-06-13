@@ -1,0 +1,12 @@
+{
+	"version": 3,
+	"file": "vars.css",
+	"sources": [
+		"../../sass/abstracts/vars.scss"
+	],
+	"sourcesContent": [
+		"\r\n"
+	],
+	"names": [],
+	"mappings": ""
+}

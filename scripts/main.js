@@ -105,10 +105,22 @@ class Angles {
 			[this.DIRECTIONS[1]]: new Vector(0,-1)}
 	};
 
+	static offset = '-10px';
+
+	static MARKER_POSITIONS = {
+		[this.ORIENTATIONS[0]]: {
+			[this.DIRECTIONS[0]]: {'top': '0px', 'right': '', 'left': '0px', 'bottom': ''}, 
+			[this.DIRECTIONS[1]]: {'top': '', 'right': '0px', 'left': '', 'bottom': '0px'}}, 
+		[this.ORIENTATIONS[1]]: {
+			[this.DIRECTIONS[0]]: {'top': '0px', 'right': '0px', 'left': '', 'bottom': ''}, 
+			[this.DIRECTIONS[1]]: {'top': '', 'right': '', 'left': '0px', 'bottom': '0px'}},
+	};
+
 	constructor(ORIENTATION, DIRECTION) {
 		this.orientation = ORIENTATION;
 		this.direction = DIRECTION;
 		this.movement = Angles.CELL_MOVEMENTS[this.orientation][this.direction];
+		this.marker_position = Angles.MARKER_POSITIONS[this.orientation][this.direction];
 	}
 
 	getOpposite() {
@@ -128,21 +140,41 @@ class Angles {
 	}
 }
 
+class Marker {
+	constructor(WORD, CELL) {
+		this.container = document.createElement('div');
+		this.container.setAttribute('class', 'empty-div');
+
+		this.word = WORD;
+		this.cell = CELL;
+		this.marker = document.createElement('p');
+		this.marker.setAttribute('class', 'markers');
+		this.marker.innerHTML = 'A';
+		//this.marker.style.textAlign = 'center';
+		this.container.appendChild(this.marker);
+	}
+
+	setIndex(INDEX) {
+		console.log('LOOOKKKKKKKKKKKKKKKKKKKKKKKKKKKKK', INDEX, this.marker);
+		this.marker.innerHTML = INDEX;
+		//MARKER.marker.innerHTML = 'B';
+		//console.log('LOOOKKKKKKKKKKKKKKKKKKKKKKKKKKKKK', INDEX, this.marker);
+	}
+}
+
 class Input {
-	/*
-	html_text_input,
-	ids, // words, with letter (word index),
-	grid_position,
-	is_done,
-	*/
 	constructor(LETTER, CELL) {
 		this.letter = LETTER;
 		this.cell = CELL;
 		this.ids = []; // Lista de objetos [{word: 'DESIGN', index: 4}, {word: 'GUN', index: 1}];
+		this.container = document.createElement('div');
+		this.container.style.position = 'relative';
+
 		this.input = document.createElement('input');
 		this.input.setAttribute('type', 'text');
 		this.input.value = this.letter;
 		this.input.disabled = true;
+		this.container.appendChild(this.input);
 	}
 
 	addId(WORD, INDEX) {
@@ -153,6 +185,7 @@ class Input {
 
 let crossword = {
 	container: document.getElementById('crossword'),
+	descriptions_container: document.getElementById('descriptions'),
 	descriptions: {
 	  'apartment': 'A set of rooms for someone to live in on one level of a building or house', 
 	  'glass': 'A hard, clear substance that objects such as windows and bottles are made of', 
@@ -235,6 +268,8 @@ let crossword = {
 	inputs_by_id: {},
 	inputs_by_cell_id: {},
 	active_cells: [],
+	markers: [],
+	markers_by_word: {},
 
 	amount: 5,
 	counter: 0,
@@ -271,7 +306,16 @@ let crossword = {
 		let word_cells = [];
 
 		const CELL_MOVEMENT = WORD_ANGLES.movement;
-		let actual_cell = START_CELL.copy();
+		let actual_cell = START_CELL.copy().sub(CELL_MOVEMENT);
+
+		this.active_cells.push(actual_cell.copy());
+
+		const MARKER = new Marker(WORD, actual_cell.copy());
+		this.markers_by_word[WORD] = MARKER;
+		this.markers.push(MARKER);
+
+		actual_cell.add(CELL_MOVEMENT);
+
 		for (const LETTER of WORD) {
 			word_cells.push(actual_cell.copy());
 			this.active_cells.push(actual_cell.copy());
@@ -327,7 +371,10 @@ let crossword = {
 		this.__createCssGrid();
 		this.__offsetCellsGrid();
 		this.__positionInputs();
+		this.__positionMarkers();
+		this.__setMarkersIndex();
 		this.__fillGrid();
+		this.__createDescriptions();
 	},
 
 	// -------- START
@@ -340,9 +387,9 @@ let crossword = {
 		let active_connector_indexes = []; 
 
 		const WORD_ANGLES = this.words_data[WORD].ANGLES;
-    let word_opposite_angles = WORD_ANGLES.getOpposite();
+    	let word_opposite_angles = WORD_ANGLES.getOpposite();
 
-    let word_successfully_suited;
+    	let word_successfully_suited;
 
 		// ----- sequence1.
 		let selected_connector_index = '';
@@ -412,7 +459,7 @@ let crossword = {
 			}
 		}
 
-    //Look for a random word that also contains that connector (letter).
+    	//Look for a random word that also contains that connector (letter).
 		function sequence2() {
 			console.log('')
 			console.log('')
@@ -456,8 +503,8 @@ let crossword = {
 			return false;
 		}
 
-  	//Try fitting the selected_word with all its repeated connectors
-  	// in all possible angles, till asserting.
+  		//Try fitting the selected_word with all its repeated connectors
+  		// in all possible angles, till asserting.
 		function sequence3() {
 			console.log('')
 			console.log('')
@@ -580,7 +627,7 @@ let crossword = {
 			}
 
       plugged_words_data.push(PLUGGABLE_WORD_DATA);
-    }
+    	}
 
 		sequence1();
 
@@ -612,7 +659,6 @@ let crossword = {
 
 				if (!this.inputs_by_cell_id[CELL_ID]) {
 					const INPUT = new Input(LETTER, CELL);
-
 					INPUT.addId(WORD, index);
 
 					this.inputs.push(INPUT);
@@ -642,11 +688,11 @@ let crossword = {
 		for (const INPUT of this.inputs) {
 			INPUT.cell.add(offset_cell);
 		}
+		for (const MARKER of this.markers) {
+			MARKER.cell.add(offset_cell);
+		}
 	},
 	__createCssGrid: function() {
-		// cuantas columnas tiene?
-		// cuantas filas tiene?
-
 		this.grid_dimentions = {columns: 0, rows: 0};
 		for (const INPUT of this.inputs) {
 			if (INPUT.cell.x > this.grid_dimentions.columns) this.grid_dimentions.columns = INPUT.cell.x;
@@ -660,35 +706,68 @@ let crossword = {
 
 		this.container.style.gridTemplateColumns = 'repeat(' + this.grid_dimentions.columns + ', ' + this.grid_cell_size + ')';
 		this.container.style.gridTemplateRows = 'repeat(' + this.grid_dimentions.rows + ', ' + this.grid_cell_size + ')';
-
-		for (const INPUT of this.inputs) {
-			this.container.appendChild(INPUT.input);
-		}
 	},
 	__offsetCellsGrid: function() {
 		let offset_cell = new Vector(1,1);
 		for (const INPUT of this.inputs) {
 			INPUT.cell.add(offset_cell);
 		}
+		for (const MARKER of this.markers) {
+			MARKER.cell.add(offset_cell);
+		}
 	},
 	__positionInputs: function() {
 		for (const INPUT of this.inputs) {
-			INPUT.input.style.gridColumn = (INPUT.cell.x+1) + ' / ' + (INPUT.cell.x+2);
-			INPUT.input.style.gridRow = (INPUT.cell.y+1) + ' / ' + (INPUT.cell.y+2);
+			this.container.appendChild(INPUT.container);
+
+			INPUT.container.style.gridColumn = (INPUT.cell.x+1) + ' / ' + (INPUT.cell.x+2);
+			INPUT.container.style.gridRow = (INPUT.cell.y+1) + ' / ' + (INPUT.cell.y+2);
+		}
+	},
+	__positionMarkers: function() {
+		for (const MARKER of this.markers) {
+			this.container.appendChild(MARKER.container);
+
+			console.log(MARKER.cell.x, MARKER.cell.y, 'LOOOKKK ATTTT HITTTSSS BOYY');
+
+			MARKER.container.style.gridColumn = (MARKER.cell.x+1) + ' / ' + (MARKER.cell.x+2);
+			MARKER.container.style.gridRow = (MARKER.cell.y+1) + ' / ' + (MARKER.cell.y+2);
+		}
+	},
+	__setMarkersIndex() {
+		/*const WORDS_DATA_KEYS = Object.keys(this.words_data);
+		for (const WORD of WORDS_DATA_KEYS) {
+			//this.markers_by_word[WORD].setIndex(this.words_data[WORD].INDEX);
+			Marker.setIndex(this.markers_by_word[WORD], this.words_data[WORD].INDEX);
+		}*/
+
+		for (const MARKER of this.markers) {
+			MARKER.setIndex(this.words_data[MARKER.word].INDEX);
 		}
 	},
 	__fillGrid: function() {
 		// llenar todos los grids.
-		const DIVS_AMOUNT = (this.grid_dimentions.columns * this.grid_dimentions.rows) - this.inputs.length;
+		const DIVS_AMOUNT = (this.grid_dimentions.columns * this.grid_dimentions.rows) - this.inputs.length - this.markers.length;
 		for (let num = 0; num < DIVS_AMOUNT; num++) {
 			const DIV = document.createElement('div');
+			DIV.setAttribute('class', 'empty-div');
 			this.container.appendChild(DIV);
-			//DIV.style.width = '100%';
-			//DIV.style.height = '100%';
-			DIV.style.background = '#333';
+		}
+	},
+	__createDescriptions: function() {
+		let index = 1;
+		for (const WORD of Object.keys(this.words_data)) {
+			const DESCRIPTION_CARD = document.createElement('div');
+			DESCRIPTION_CARD.setAttribute('class', 'description-cards');
+			const DESCRIPTION = document.createElement('p');
+
+			DESCRIPTION.innerHTML = index + '. ' + this.descriptions[WORD.toLowerCase()];
+			DESCRIPTION_CARD.appendChild(DESCRIPTION);
+			this.descriptions_container.appendChild(DESCRIPTION_CARD);
+			index++;
+
 		}
 	}
-
 }
 
 let control = {

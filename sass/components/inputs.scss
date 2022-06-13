@@ -1,0 +1,19 @@
+
+
+
+input[type="text"] {
+      text-align: center;
+      font-family: cursive;
+      border-radius: 0;
+      border-width: 0px;
+      width: 100%;
+      height: 100%;
+}
+
+input:disabled {
+      /*background-color: rgba(186,85,211,0.7);*/
+      background-color: #f9f9f9;
+      border-color: black;
+      border-width: 0px;
+      border-radius: 3px;
+}
