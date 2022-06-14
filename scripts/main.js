@@ -180,13 +180,16 @@ class Input {
 			Input.last_id = undefined;
 		}
 		this.input.oninput = () => {
+			console.log('ON INPUT', this.ids);
+
+			// ----- Set its value (max-lengh 1)
 			if (this.input.value.length < 1) {
 				this.input.value = '';
 			} else if (this.input.value.length > 0) {
 				this.input.value = this.input.value[this.input.value.length-1].toUpperCase();
 			}
 
-			// verificar si todos los inputs ya tienen sus valores correspondientes.
+			// ----- If the word is completed, then disable the inputs :v
 			main:
 			for (const ID_DATA of this.ids) {
 				let index = 0;
@@ -211,8 +214,7 @@ class Input {
 			}
 
 
-
-			console.log('ON INPUT', this.ids);
+			// ----- Focus on the right next input after pressing the key.
 			if (this.input.value.length > 0) {
 				this.input.value = this.input.value[this.input.value.length-1].toUpperCase();
 				if (this.ids.length == 1) {
