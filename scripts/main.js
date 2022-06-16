@@ -3,39 +3,6 @@
 
 
 
-/*
-
-
-
-
-
-
-
-
-Esta aplicacion costa de dos secciones
-
-#1 Una Grid en la que se encuentran todos los inputs.
-#2 Un <ol> que contiene todas las descripciones.
-
-
-Cada Input tiene:
-	Un HTML input text.
-	Una letra.
-	Una posicion en la grid.
-	Un Id.
-	Ids predecesores.
-	Bool: is_done. // dehabilitado o habilirado
-
-
-FINAL RESULT: List of inputs.
-
-
-
-
-
-
-
-*/
 class Vector {
 	constructor(x, y) {
 		this.x = x;
@@ -162,7 +129,7 @@ class Marker {
 	}
 }
 
-class Input {
+class InputOld {
 	static last_id = undefined;
 
 	constructor(LETTER, CELL) {
@@ -268,6 +235,93 @@ class Input {
 	addId(WORD, INDEX) {
 		this.ids.push({word: WORD, index: INDEX});
 	}
+
+	helper() {
+		this.input.value = this.letter;
+		this.input.disabled = true;
+	}
+}
+
+class Input {
+	static current_word = undefined;
+
+	constructor(LETTER, CELL) {
+		this.letter = LETTER;
+		this.cell = CELL;
+		this.ids = []; // Lista de objetos [{word: 'DESIGN', index: 4}, {word: 'GUN', index: 1}];
+		this.container = document.createElement('div');
+		this.container.setAttribute('class', 'input_container');
+		this.container.style.position = 'relative';
+
+		this.input = document.createElement('input');
+		this.container.appendChild(this.input);
+		this.input.setAttribute('type', 'text');
+		this.input.onclick = () => {
+			Input.current_word = this.ids[0].word;
+		}
+		this.input.oninput = () => {
+			console.log('ON INPUT', this.ids);
+
+			// ----- Set its value (max-lengh 1)
+			if (this.input.value.length < 1) {
+				this.input.value = '';
+			} else if (this.input.value.length > 0) {
+				this.input.value = this.input.value[this.input.value.length-1].toUpperCase();
+			}
+
+			// ----- If the word is completed, then disable the inputs :v
+			main:
+			for (const ID_DATA of this.ids) {
+				let index = 0;
+				for (const LETTER of ID_DATA.word) {
+					const VALUE = crossword.inputs_by_id[ID_DATA.word + index].input.value;
+					const LETTER = crossword.inputs_by_id[ID_DATA.word + index].letter;
+					console.log(ID_DATA.word, VALUE, LETTER);
+					console.log(VALUE == LETTER);
+					if (VALUE != LETTER) {
+						break main;
+					}
+					index++;
+				}
+				// si logra pasar aca, quiere decir que ya todas estan completas.
+				index = 0;
+				for (const LETTER of ID_DATA.word) {
+					console.log('NO DEBERIA ENTRAR AQUI');
+					const INPUT = crossword.inputs_by_id[ID_DATA.word + index];
+					INPUT.input.disabled = true;
+					index++;
+				}
+			}
+
+
+			// ---- Focus the next input.
+			init:
+			for (const ID_DATA of this.ids) {
+				if (ID_DATA.word == Input.current_word) {
+					for (let i=ID_DATA.index+1; i<100; i++) {
+						const NEXT_INPUT = crossword.inputs_by_id[Input.current_word + i];
+						if (NEXT_INPUT && (NEXT_INPUT.input.disabled == false)) {
+							this.input.blur();
+							NEXT_INPUT.input.focus();
+
+							break init;
+						} else if (!NEXT_INPUT) {
+							this.input.blur();
+						}
+					}
+				}
+			}
+		};
+	}
+
+	addId(WORD, INDEX) {
+		this.ids.push({word: WORD, index: INDEX});
+	}
+
+	helper() {
+		this.input.value = this.letter;
+		this.input.disabled = true;
+	}
 }
 
 
@@ -351,6 +405,7 @@ let crossword = {
 	copy_words: [],
 	words_data: {}, // this is only for construction.
 	words_to_extend: [],
+	word_inputs: {},
 	
 	inputs: [],
 	inputs_by_id: {},
@@ -422,7 +477,7 @@ let crossword = {
 	  }
 	},
 
-	start: function() {
+	generate: function() {
 		// primero debemos seleccionar una palabra aleatorea de la lista de palabras.
 		const WORD = this.__popRandomWord();
 		const START_CELL = new Vector(0, 0);
@@ -454,6 +509,7 @@ let crossword = {
 
 		console.log('WORDS DATA', this.words_data);
 		this.__createInputs();
+		this.__fillInputsWithRandomHelpers();
 		this.__offsetCells();
 		console.log('INPUTS', this.inputs);
 		this.__createCssGrid();
@@ -738,6 +794,7 @@ let crossword = {
   __createInputs: function() {
 		const WORDS_DATA_KEYS = Object.keys(this.words_data);
 		for (const WORD of WORDS_DATA_KEYS) {
+			let inputs_array = [];
 
 			let index = 0;
 			for (const LETTER of WORD) {
@@ -752,6 +809,7 @@ let crossword = {
 					this.inputs.push(INPUT);
 					this.inputs_by_id[INPUT_ID] = INPUT;
 					this.inputs_by_cell_id[CELL_ID] = INPUT;
+					inputs_array.push(INPUT);
 
 				} else { // this is a connector cell, so DON'T create another.
 				 const INPUT_CONNECTOR = this.inputs_by_cell_id[CELL_ID];
@@ -760,6 +818,33 @@ let crossword = {
 				}
 
 				index++;
+			}
+
+			this.word_inputs[WORD] = inputs_array.slice();
+		}
+	},
+	__fillInputsWithRandomHelpers: function() {
+		/*
+		en este punto tengo dos opciones para llenar los inputs,
+		la primera es aplicar la fuerza bruta y con una probabilidad
+		llenar el array de los inputs al azar.
+
+		la segunda es aplicar la probabilidad a los inputs pero de 
+		cada palabra.
+
+		basicamente necesito ese grupo de inputs por palabra.
+		*/
+
+		const WORDS_DATA_KEYS = Object.keys(this.words_data);
+		for (const WORD of WORDS_DATA_KEYS) {
+
+			const HELPER_PROBABILITY_RANGE = [.3, .4];
+			const HELPER_PROBABILITY = (Math.random() < 0.5) ? HELPER_PROBABILITY_RANGE[0] : HELPER_PROBABILITY_RANGE[1];
+			for (const INPUT of this.word_inputs[WORD]) {
+				const RANDOM_MEASURE = Math.random();
+				if (RANDOM_MEASURE <= HELPER_PROBABILITY) {
+					INPUT.helper();
+				}
 			}
 		}
 	},
@@ -823,12 +908,6 @@ let crossword = {
 		}
 	},
 	__setMarkersIndex() {
-		/*const WORDS_DATA_KEYS = Object.keys(this.words_data);
-		for (const WORD of WORDS_DATA_KEYS) {
-			//this.markers_by_word[WORD].setIndex(this.words_data[WORD].INDEX);
-			Marker.setIndex(this.markers_by_word[WORD], this.words_data[WORD].INDEX);
-		}*/
-
 		for (const MARKER of this.markers) {
 			MARKER.setIndex(this.words_data[MARKER.word].INDEX);
 		}
@@ -862,12 +941,12 @@ let control = {
 	setup: function() {
 		crossword.setup();
 		//descriptions.setup();
-		crossword.start();
+		crossword.generate();
 
 	},
 	start_game: function() {
 		// function called by menu start button.
-		//crossword.start();
+		//crossword.generate();
 
 	},
 	finish: function() {
